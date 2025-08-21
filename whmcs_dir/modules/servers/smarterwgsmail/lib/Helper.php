@@ -7,49 +7,31 @@ use WHMCS\Database\Capsule;
 use WHMCS\Module\Server\SmarterWgsMail\Curl;
 class Helper {
     
-    public $serverhostname = '';
-    public $serverusername = '';
-    public $serverpassword = '';
-    public $baseUrl = '';
+    public $curl;
     public $token = '';
-    public $authResponse = '';
+    public $authResponse = [];
 
+    function __construct($params = []) {
+        $this->curl = new Curl($params);
 
-    public $userId = '';
-    public $serviceId = '';
-    public $productId = '';
-
-    function __construct($params = [])
-    {
-        $curl = new Curl($params);
-
-        $this->serverhostname = $params['serverhostname'];
-        $this->serverusername = $params['serverusername'];
-        $this->serverpassword = $params['serverpassword'];
-
-        $this->userId = $params['userid'];
-        $this->serviceId = $params['serviceid'];
-        $this->productId = $params['pid'];
-
-
-        $this->baseUrl = "https://" . $this->serverhostname . "/api/v1/";
-
-        $endPoint = "auth/authenticate-user";
-
-        if($this->serverpassword != '') {
+        if (!empty($params['serverpassword'])) {
             $data = [
-                'username' => $this->serverusername,
-                'password' => $this->serverpassword
+                'username' => $params['serverusername'],
+                'password' => $params['serverpassword']
             ];
-            
-            $this->authResponse = $curl->curlCall($endPoint, $data, 'POST', 'GetToken');
-    
+
+            $this->authResponse = $this->curl->curlCall("auth/authenticate-user", $data, 'POST', 'GetToken');
+
+            if ($this->authResponse['httpcode'] == 200 && $this->authResponse['result']['success'] == 1) {
+                $this->token = $this->authResponse['result']['accessToken'];
+                $this->curl->setToken($this->token);
+            }
         }
     }
 
-    /* 
-     Test connection 
-    **/
+    /**
+     * Test connection 
+    */ 
     public function smarterWgsMailertestConn() {
         try {
 
@@ -67,7 +49,9 @@ class Helper {
     } 
 
 
-    // Product custom fields
+    /** 
+     * Product custom fields
+    */
     public static function create_custom_fields($productId)
     {
         try {
@@ -133,7 +117,9 @@ class Helper {
         }
     }
 
-    // Product config options
+    /**
+     * Product config options 
+    */
     public static function create_config_options($productId)
     {
         try {
@@ -162,12 +148,12 @@ class Helper {
             }
 
             $options = [
-                ['Domain Quote Upgrade', 1, 10],
-                ['User Aliases', 0, 50],
-                ['Mailbox Size', 0, 10],
-                ['ESA Device Quota', 0, 10],
-                ['MAPI/EWS Device Quota', 0, 10],
-                ['Domain Aliases Quota', 0, 10],
+                ['domain_Qupgrade|Domain Quote Upgrade', 1, 10],
+                ['user_Aliases|User Aliases', 0, 50],
+                ['mail_Bsize|Mailbox Size', 0, 10],
+                ['esa_Dquota|ESA Device Quota', 0, 10],
+                ['mapiews_Dquota|MAPI/EWS Device Quota', 0, 10],
+                ['domain_Aquota|Domain Aliases Quota', 0, 10],
             ];
 
             foreach ($options as $opt) {
@@ -191,6 +177,21 @@ class Helper {
 
         } catch (Exception $e) {
             logActivity("Error creating SmarterWgsMail Config Options: " . $e->getMessage());
+        }
+    }
+
+
+    /**
+     * Register domain
+    */
+    public function registerDomain($data) {
+        try {
+            $endPoint = 'settings/sysadmin/domain-put';
+            $response = $this->curl->curlCall($endPoint, $data, 'POST', 'registerDomain');
+            // echo "<pre>"; print_r($response); die;
+            return $response;
+        } catch(Exception $e) {
+            logActivity("Error to register domain in SmarterWgsMail. Error: ".$e->getMessage());
         }
     }
 

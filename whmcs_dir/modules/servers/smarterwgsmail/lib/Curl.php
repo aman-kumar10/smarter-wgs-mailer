@@ -6,33 +6,35 @@ use WHMCS\Database\Capsule;
 
 
 class Curl {
-    
     private $serverhostname = '';
     private $serverusername = '';
     private $serverpassword = '';
     private $baseUrl = '';
+    public $token = '';
 
     public $userId = '';
     public $serviceId = '';
     public $productId = '';
 
-    public function __construct($params){  
+    public function __construct($params = []) {
+        if (!empty($params)) {
+            $this->serverhostname = $params['serverhostname'];
+            $this->serverusername = $params['serverusername'];
+            $this->serverpassword = $params['serverpassword'];
 
-        $this->serverhostname = $params['serverhostname'];
-        $this->serverusername = $params['serverusername'];
-        $this->serverpassword = $params['serverpassword'];
+            $this->userId = $params['userid'];
+            $this->serviceId = $params['serviceid'];
+            $this->productId = $params['pid'];
 
-        $this->userId = $params['userid'];
-        $this->serviceId = $params['serviceid'];
-        $this->productId = $params['pid'];
-
-        $this->baseUrl = "https://" . $this->serverhostname . "/api/v1/";
-
+            $this->baseUrl = "https://" . $this->serverhostname . "/api/v1/";
+        }
     }
 
-    /* Curl Handlig */
-    function curlCall($endPoint, $data = [], $method = 'GET', $action = '')
-    {
+    public function setToken($token) {
+        $this->token = $token;
+    }
+
+    public function curlCall($endPoint, $data = [], $method = 'GET', $action = '') {
         try {
             $url = $this->baseUrl . $endPoint;
 
@@ -43,17 +45,24 @@ class Curl {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30); // reasonable timeout
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+            $headers = [];
+            if (!empty($this->token)) {
+                $headers[] = 'Authorization: Bearer ' . $this->token;
+            }
 
             if (strtoupper($method) !== 'GET') {
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
                 if (!empty($data)) {
-                    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                    $headers[] = 'Content-Type: application/json';
                     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
                 }
             }
+
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -66,21 +75,18 @@ class Curl {
 
             curl_close($ch);
 
-            // Log request & response
-            logModuleCall( 'SmarterWgsMail', $action, $url, json_encode($data), $response, []);
+            logModuleCall('SmarterWgsMail', $action, $url, json_encode($data), $response, []);
 
             return [
                 'httpcode' => $httpCode,
                 'result'   => json_decode($response, true)
             ];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [
                 'httpcode' => 500,
                 'error'    => $e->getMessage()
             ];
         }
     }
-
-
 }
