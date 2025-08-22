@@ -1,6 +1,7 @@
 <?php
 
 use WHMCS\Database\Capsule;
+use WHMCS\Module\Server\SmarterWgsMail\Curl;
 use WHMCS\Module\Server\SmarterWgsMail\Helper;
 
 
@@ -10,8 +11,9 @@ if (!defined("WHMCS")) {
 }
 
 
-
-
+/**
+ * Meta Data
+*/
 function smarterwgsmail_MetaData()
 {
     return array(
@@ -26,7 +28,9 @@ function smarterwgsmail_MetaData()
 }
 
 
-
+/**
+ * Config Options
+*/
 function smarterwgsmail_ConfigOptions($params)
 {
     global $whmcs;
@@ -38,110 +42,161 @@ function smarterwgsmail_ConfigOptions($params)
     $helper->create_custom_fields($whmcs->get_req_var('id'));
     $helper->create_config_options($whmcs->get_req_var('id'));
 
-    return array(
-        'Domain Folder Path' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => 'Enter in megabytes',
-        ),
-        'Outbound IP Address' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => 'Enter in megabytes',
-        ),
-        'Users' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => '0 = unlimited',
-        ),
-        'Mailbox Size Limit (MB)' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => '0 = unlimited',
-        ),
-        'User Aliases' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => '0 = unlimited, -1 = disable',
-        ),
-        'Domain Aliases' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => '0 = unlimited, -1 = disable',
-        ),
-        'EAS Accounts' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => '0 = unlimited, -1 = disable (Enterprise Only)',
-        ),
-        'Mailing Lists' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => '0 = unlimited, -1 = disable',
-        ),
-        'MAPI/EWS Accounts' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => '0 = unlimited, -1 = disable (Enterprise Only)',
-        ),
-        'Domain Disk Space Limit (MB)' => array(
-            'Type' => 'text',
-            'Size' => '25',
-            'Description' => '0 = unlimited',
-        ),
-        
-        'Active Directory Integration' => array(
-            'Type' => 'yesno',
-            'Description' => '(Enterprise Only)',
-        ),
-        'Webmail Login Customization' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-        'Automated Forwarding' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-        'SMTP Accounts' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-        'Chat (XMPP)' => array(
-            'Type' => 'yesno',
-            'Description' => '(Enterprise Only)',
-        ),
-        'Disposable Address' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-        'File Storage' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-        'Global Address List' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-        'Online Meetings' => array(
-            'Type' => 'yesno',
-            'Description' => '(Enterprise Only)',
-        ),
-        'Two-Step Authentication' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-        'Remove domain data on delete' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-        'Allow domain administrators to manage Mailbox Size Limit' => array(
-            'Type' => 'yesno',
-            'Description' => '',
-        ),
-    );
+    return [
+        "configoption1" => [
+            "FriendlyName" => "Domain Folder Path",
+            "Type" => "text", 
+            "Size" => "15", 
+            "Description" => "",
+            "Default" => "C:\\SmarterMail\\Domains\\",
+        ],
+        "configoption2" => [
+            "FriendlyName" => "Outbound IP Address",
+            "Type" => "text", 
+            "Size" => "14", 
+            "Description" => "",
+            "Default" => "default",
+        ],
+        "configoption3" => [
+            "FriendlyName" => "Users",
+            "Type" => "text",
+            "Description" => "0 = unlimited",
+            "Size" => "14",
+			"Default" => "5",
+        ],
+        "configoption4" => [
+            "FriendlyName" => "Mailbox Size Limit (MB)",
+            "Type" => "text", 
+            "Size" => "14",
+            "Description" => "0 = unlimited",
+            "Default" => "1000",
+        ],
+        "configoption5" => [
+            "FriendlyName" => "User Aliases",
+            "Type" => "text", 
+            "Size" => "14",
+            "Description" => "0 = unlimited, -1 = disable",
+			"Default" => "-1",
+        ],
+        "configoption6" => [
+            "FriendlyName" => "Domain Aliases",
+            "Type" => "text", 
+            "Size" => "5",
+            "Description" => "0 = unlimited, -1 = disable",
+			"Default" => "-1",
+        ],
+        "configoption7" => [
+            "FriendlyName" => "EAS Accounts",
+            "Type" => "text",
+            "Size" => "14",
+            "Description" => "0 = unlimited, -1 = disable, (Enterprise Only)",
+			"Default" => "-1",
+        ],
+        "configoption8" => [
+            "FriendlyName" => "Mailing Lists",
+            "Type" => "text",
+            "Size" => "14",
+            "Description" => "0 = unlimited, -1 = disable",
+			"Default" => "0",
+        ],
+        "configoption9" => [
+            "FriendlyName" => "MAPI/EWS Accounts",
+            "Type" => "text",
+            "Size" => "14",
+            "Description" => "0 = unlimited, -1 = disable, (Enterprise Only)",
+			"Default" => "-1",
+        ],
+        "configoption10" => [
+            "FriendlyName" => "Domain Disk Space Limit (MB)",
+            "Type" => "text",
+            "Size" => "14",
+            "Description" => "0 = unlimited",
+			"Default" => "0",
+        ],
+        "configoption11" => [
+            "FriendlyName" => "Active Directory Integration",
+            "Type" => "yesno",
+            "Size" => "14",
+			"Description" => "(Enterprise Only)",
+            "Default" => "",
+        ],
+        "configoption12" => [
+            "FriendlyName" => "Webmail Login Customization",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Default" => "true",
+        ],
+        "configoption13" => [
+            "FriendlyName" => "Automated Forwarding",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Default" => "true",
+        ],
+        "configoption14" => [
+            "FriendlyName" => "SMTP Accounts",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Default" => "true",
+        ],
+        "configoption15" => [
+            "FriendlyName" => "Chat (XMPP)",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Default" => "true",
+			"Description" => "(Enterprise Only)",
+        ],
+        "configoption16" => [
+            "FriendlyName" => "Disposable Address",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Default" => "true",
+        ],
+        "configoption17" => [
+            "FriendlyName" => "File Storage",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Default" => "true",
+        ],
+        "configoption18" => [
+            "FriendlyName" => "Global Address List",
+            "Type" => "yesno",
+            "Size" => "16",
+            "Description" => "",
+            "Default" => "true",
+        ],
+        "configoption19" => [
+            "FriendlyName" => "Online Meetings",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Description" => "(Enterprise Only)",
+            "Default" => "true",
+        ],
+        "configoption20" => [
+            "FriendlyName" => "Two-Step Authentication",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Description" => "",
+            "Default" => "true",
+        ],
+        "configoption21" => [
+            "FriendlyName" => "Remove domain data on delete",
+            "Type" => "yesno",
+            "Size" => "14",
+            "Default" => "true",
+        ], 
+        "configoption22" => [
+			"FriendlyName" => "Allow domain administrators to manage Mailbox Size Limit",
+			"Type" => "yesno",
+			"Size" => "14",
+			"Default" => "false",
+		],
+    ];
 }
 
 
+/**
+ * Test Connection
+*/
 function smarterwgsmail_TestConnection( $params)
 {
     try {
@@ -149,11 +204,13 @@ function smarterwgsmail_TestConnection( $params)
         $errorMsg  = '';
         $success = '';
 
-        $helper = new Helper($params);
-        $curlRes = $helper->smarterWgsMailertestConn();
+        $curlRes = new Curl($params);
 
-        if ($curlRes['httpcode'] == 200 && $curlRes['result']['success'] == 1) {
-            $token = $curlRes['result']['accessToken'];
+        $curlRes = (array)$curlRes;
+        $authResponse = $curlRes['authResponse'];
+
+        if ($authResponse['httpcode'] == 200 && ($authResponse['result']['success'] === 1 || $authResponse['result']['success'] === true)) {
+            $token = $authResponse['result']['accessToken'];
 
             Capsule::table("tblservers")->where("name", "Smarter Wgs Mailer")->where("hostname", $params['serverhostname'])->where("type", "smarterwgsmail")->update([
                 'accesshash' => $token,
@@ -162,7 +219,7 @@ function smarterwgsmail_TestConnection( $params)
             $success = true;
             
         } else {
-            $errorMsg = $curlRes['result']->getMessage;
+            $errorMsg = $authResponse['result']->getMessage;
         }
 
         return array('success' => $success, 'error' => $errorMsg);
@@ -186,12 +243,13 @@ function smarterwgsmail_TestConnection( $params)
     );
 }
 
-function smarterwgsmail_CreateAccount( $params)
-{
+/**
+ * Create Account
+*/
+function smarterwgsmail_CreateAccount( $params){
     try {
         // 
         $helper = new Helper($params);
-
 
         $maxUsers = intval($params["configoption3"]);
         $maxMailboxSize = intval($params["configoption4"]);
@@ -366,7 +424,7 @@ function smarterwgsmail_CreateAccount( $params)
 
 
         //Post data
-        $inputData = [
+        $inputData1 = [
             'adminUsername'=> $adminUsername,
             'adminPassword'=> $adminPassword,
             'deliverLocallyForExternalDomain' => false,
@@ -386,15 +444,187 @@ function smarterwgsmail_CreateAccount( $params)
         ];
 
 
-        $curlRes = $helper->registerDomain($inputData);
+        // Post1
+        $domainPut_res = $helper->sysadmin_domainPut($inputData1);
 
-        if($curlRes['httpcode'] == 200 && $curlRes['result']['success'] == 1) {
-            return 'success';
-        } else {
-            return $curlRes['result']['message'];
+        if($domainPut_res['httpcode'] != 200 && ($domainPut_res['result']['success'] != 1 || $domainPut_res['result']['success'] != true)) {
+            if(isset($domainPut_res['result']['message']) && $domainPut_res['result']['message'] != "") {
+                $errMsg = $domainPut_res['result']['message'];
+                if(str_starts_with($errMsg, "DOMAIN_ADD_ERROR_NAME_IN_USE")) {
+                    return "Domain name is already in use.";
+                }
+                return $domainPut_res['result']['message'];
+            }
+            else {
+                return "An error has occurred.";
+            }
         }
+
+
+        //Domain settings
+        $inputData2 = array(
+            'domainSettings' => array(
+                'activeDirectoryIntegration' => (($params["configoption11"] == "on") ? true : false),
+                'customLoginDisplay' => (($params["configoption12"] == "on") ? true : false),
+                'enableMailForwarding'=> (($params["configoption13"] == "on") ? true : false),
+                'enableSmtpAccounts'=> (($params["configoption14"] == "on") ? true : false),
+                'enableXmpp'=> (($params["configoption15"] == "on") ? true : false),
+                'enableDisposableAddresses' => (($params["configoption16"] == "on") ? true : false),
+                'enableFileStorage' => (($params["configoption17"] == "on") ? true : false),
+                'sharedGlobalAddressList' => (($params["configoption18"] == "on") ? true : false),
+                'webConferencing' => (($params["configoption19"] == "on") ? true : false),
+                'twoFactorSettings' => array(
+                    'setting' => (($params["configoption20"] == "on") ? "1" : "0"),
+                ),
+                'maxActiveSyncAccounts' => $allocatedEas,
+                'maxMapiEwsAccounts' => $allocatedMapi,
+                'maxDomainAliases' => $maxDomainAliases,
+                'enableActiveSyncAccountManagement' => ($allocatedEasManagement ? true : false),
+                'enableMapiEwsAccountManagement' => ($allocatedMapiManagement ? true : false),
+                'allowUserSizeChanging' => ($maxMailboxSizeManagement ? true : false),
+                'showDomainAliasMenu' => ($domainAliasManagement ? true : false),
+                'showListMenu' => ($mailingListManagement ? true : false)
+            )
+        );
+
+        // Post 2
+        $domainSettings_res = $helper->sysadmin_domainSettings($inputData2);
+        if($domainSettings_res['httpcode'] != 200 && ($domainSettings_res['result']['success'] != 1 || $domainSettings_res['result']['success'] != true)) {
+            
+            logActivity("Removing domain, failed to apply settings correctly", 0);
+
+            // Post3
+            $domainDelete_res = $helper->sysadmin_domainDelete($inputData2);
+            if(isset($domainSettings_res['result']['message']) && $domainSettings_res['result']['message'] != "") {
+                return $domainSettings_res['result']['message'];
+            } else {
+                return "An error has occurred.";
+            }
+        }
+
+
+        //User defaults
+        $inputData3 = [
+            'maxMailboxSize' => $maxMailboxSize*1024 * 1024,
+            'services' => new stdClass()
+        ];
+        
+        // Post4
+        $userDefaults_res = $helper->domain_userDefault($inputData3);
+
+        if($userDefaults_res['code'] != 200 && ($userDefaults_res['result']['success'] != 1 || $userDefaults_res['result']['success'] != true)) {
+
+        } else {
+
+            // Propagate Settings
+            $inputData4 = [
+                'globalUpdate' => [
+                    ['userField' => 'MailboxSize', 'longValue' => $maxMailboxSize*1024 * 1024],
+                ],
+                'emails' => ["*@".$params["domain"]]
+            ];
+
+            // Post5
+            $propagateSettings_res = $helper->domain_propagateSettings($inputData4);
+        }
+
+
+        return 'success';
+
         
     } catch(Exception $e) {
         logActivity("Error to Create Account for SmarterWgsMail. Error: ".$e->getMessage());
+    }
+}
+
+
+/** ------------------------------------------------------------------------------------------ */
+
+
+/**
+ * Terminate Account
+*/
+function smarterwgsmail_TerminateAccount($params) {
+
+    try {
+        $helper = new Helper($params);
+
+        // 
+        $domainDelete_res = $helper->sysadmin_domainDelete((object)[], 'terminate');
+        if($domainDelete_res['httpcode'] != 200 && ($domainDelete_res['result']['success'] != 1 || $domainDelete_res['result']['success'] != true)) {
+
+            if(isset($domainDelete_res['result']['message']) && $domainDelete_res['result']['message'] != "") {
+                return $domainDelete_res['result']['message'];
+            } else {
+                return "An error has occurred.";
+            }
+        }
+
+        return "success"; 
+
+    } catch(Exception $e) {
+        logActivity("Error to Suspend Account. Error: ".$e->getMessage());
+    }
+}
+
+/**
+ * Suspend Account
+*/
+function smarterwgsmail_SuspendAccount($params) {
+    try {
+        $helper = new Helper($params);
+
+        $inputData = [
+            'domainSettings' => [
+                'isEnabled' => false
+            ] 
+        ];
+
+        // 
+        $domainSettings_res = $helper->sysadmin_domainSettings($inputData);
+        if($domainSettings_res['httpcode'] != 200 && ($domainSettings_res['result']['success'] != 1 || $domainSettings_res['result']['success'] != true)) {
+
+            if(isset($domainSettings_res['result']['message']) && $domainSettings_res['result']['message'] != "") {
+                return $domainSettings_res['result']['message'];
+            } else {
+                return "An error has occurred.";
+            }
+        }
+
+        return "success"; 
+
+    } catch(Exception $e) {
+        logActivity("Error to Suspend Account. Error: ".$e->getMessage());
+    }
+}
+
+/**
+ * Unsuspend Account
+*/
+function smarterwgsmail_UnsuspendAccount($params) {
+    try {
+        $helper = new Helper($params);
+
+        $inputData = [
+            'domainSettings' => [
+                'isEnabled' => true
+            ] 
+        ];
+
+        // 
+        $domainSettings_res = $helper->sysadmin_domainSettings($inputData);
+        if($domainSettings_res['httpcode'] != 200 && ($domainSettings_res['result']['success'] != 1 || $domainSettings_res['result']['success'] != true)) {
+
+            if(isset($domainSettings_res['result']['message']) && $domainSettings_res['result']['message'] != "") {
+                return $domainSettings_res['result']['message'];
+            } else {
+                return "An error has occurred.";
+            }
+        }
+
+        return "success"; 
+
+    } catch(Exception $e) {
+        logActivity("Error to Unsuspend Account. Error: ".$e->getMessage());
     }
 }

@@ -2,40 +2,68 @@
 
 namespace WHMCS\Module\Server\SmarterWgsMail;
 
+use Exception;
 use WHMCS\Database\Capsule;
 
 
 class Curl {
-    private $serverhostname = '';
-    private $serverusername = '';
-    private $serverpassword = '';
-    private $baseUrl = '';
+    public $serverhostname = '';
+    public $serverusername = '';
+    public $serverpassword = '';
+    public $baseUrl = '';
     public $token = '';
+    public $authResponse = '';
 
     public $userId = '';
     public $serviceId = '';
     public $productId = '';
 
     public function __construct($params = []) {
-        if (!empty($params)) {
-            $this->serverhostname = $params['serverhostname'];
-            $this->serverusername = $params['serverusername'];
-            $this->serverpassword = $params['serverpassword'];
+        try {
+            if (!empty($params)) {
+                $this->serverhostname = $params['serverhostname'];
+                $this->serverusername = $params['serverusername'];
+                $this->serverpassword = $params['serverpassword'];
 
-            $this->userId = $params['userid'];
-            $this->serviceId = $params['serviceid'];
-            $this->productId = $params['pid'];
+                $this->userId = $params['userid'];
+                $this->serviceId = $params['serviceid'];
+                $this->productId = $params['pid'];
 
-            $this->baseUrl = "https://" . $this->serverhostname . "/api/v1/";
+                $this->baseUrl = "https://" . $this->serverhostname;
+
+                if (!empty($this->serverpassword)) {
+                    $data = [
+                        'username' => $this->serverusername,
+                        'password' => $this->serverpassword
+                    ];
+    
+                    $this->authResponse = $this->curlCall("/api/v1/auth/authenticate-user", $data, 'POST', 'GetToken');
+    
+                    if ($this->authResponse['httpcode'] == 200 && $this->authResponse['result']['success'] == 1) {
+                        $this->token = $this->authResponse['result']['accessToken'];
+                    }
+                }
+
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in Curl Construtor. Error: ".$e->getMessage());
         }
+
+
     }
 
     public function setToken($token) {
         $this->token = $token;
     }
 
-    public function curlCall($endPoint, $data = [], $method = 'GET', $action = '') {
+    public function curlCall($endPoint, $data = [], $method = 'GET', $action = '', $tokenDA = '') {
         try {
+
+            if(!empty($tokenDA)) {
+                $this->token = $tokenDA;
+            }
+
             $url = $this->baseUrl . $endPoint;
 
             if (strtoupper($method) === 'GET' && !empty($data)) {
@@ -49,9 +77,11 @@ class Curl {
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 
+            // Token handling
             $headers = [];
-            if (!empty($this->token)) {
-                $headers[] = 'Authorization: Bearer ' . $this->token;
+            $activeToken = !empty($tokenDA) ? $tokenDA : $this->token;
+            if (!empty($activeToken)) {
+                $headers[] = 'Authorization: Bearer ' . $activeToken;
             }
 
             if (strtoupper($method) !== 'GET') {

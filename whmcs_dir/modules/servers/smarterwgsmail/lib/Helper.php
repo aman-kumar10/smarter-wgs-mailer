@@ -7,46 +7,50 @@ use WHMCS\Database\Capsule;
 use WHMCS\Module\Server\SmarterWgsMail\Curl;
 class Helper {
     
-    public $curl;
-    public $token = '';
+    public $serverusername;
+    public $serverpassword;
     public $authResponse = [];
 
+    public $userId = '';
+    public $params = [];
+    public $serviceId = '';
+    public $productId = '';
+
     function __construct($params = []) {
-        $this->curl = new Curl($params);
 
-        if (!empty($params['serverpassword'])) {
-            $data = [
-                'username' => $params['serverusername'],
-                'password' => $params['serverpassword']
-            ];
+        $this->params = $params;
 
-            $this->authResponse = $this->curl->curlCall("auth/authenticate-user", $data, 'POST', 'GetToken');
+        $this->serverusername = $params['serverusername'];
+        $this->serverpassword = $params['serverpassword'];
 
-            if ($this->authResponse['httpcode'] == 200 && $this->authResponse['result']['success'] == 1) {
-                $this->token = $this->authResponse['result']['accessToken'];
-                $this->curl->setToken($this->token);
-            }
-        }
+        $this->userId = $params['userid'];
+        $this->serviceId = $params['serviceid'];
+        $this->productId = $params['pid'];
+
     }
 
+
     /**
-     * Test connection 
-    */ 
-    public function smarterWgsMailertestConn() {
-        try {
+     * Login DA token
+    */
+    function apiLoginDAtoken($params)
+    {
+        $curl = new Curl($params);
 
-            if (empty($this->authResponse)) {
-                return [
-                    'httpcode' => 500,
-                    'error'    => 'No authentication attempt was made.'
-                ];
-            }
-            return $this->authResponse;
+        $endpoint = '/api/v1/settings/sysadmin/manage-domain/' . $params["domain"];
+        $data = [
+            'username' => $this->serverusername,
+            'password' => $this->serverpassword
+        ];
 
-        } catch(Exception $e) {
-            logActivity("Error in Smarter Wgs Mailer Server Test Connection. Error: ".$e->getMessage());
+        $response = $curl->curlCall($endpoint, $data, "POST", "manage-domain");
+
+        if($response['httpcode'] == 200 && $response['result']['success'] == true) {
+            return $response['result']['impersonateAccessToken'];
         }
-    } 
+
+        return $response;
+    }
 
 
     /** 
@@ -182,16 +186,99 @@ class Helper {
 
 
     /**
-     * Register domain
+     * Domain Put
     */
-    public function registerDomain($data) {
+    public function sysadmin_domainPut($data) {
         try {
-            $endPoint = 'settings/sysadmin/domain-put';
-            $response = $this->curl->curlCall($endPoint, $data, 'POST', 'registerDomain');
-            // echo "<pre>"; print_r($response); die;
+
+            $curl = new Curl($this->params);
+            $endPoint = '/api/v1/settings/sysadmin/domain-put';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'domain-put');
+
             return $response;
+
         } catch(Exception $e) {
-            logActivity("Error to register domain in SmarterWgsMail. Error: ".$e->getMessage());
+            logActivity("Error in domain-put, Error: ".$e->getMessage());
+        }
+    }
+
+
+    /**
+     * Domain Settings
+    */
+    public function sysadmin_domainSettings($data) {
+        try {
+
+            $curl = new Curl($this->params);
+            $endPoint = '/api/v1/settings/sysadmin/domain-settings/'.$this->params["domain"];
+
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'domain-settings');
+            return $response;
+
+        } catch(Exception $e) {
+            logActivity("Error in domain-settings, Error: ".$e->getMessage());
+        }
+    }
+
+
+    /**
+     * Domain Delete
+    */
+    public function sysadmin_domainDelete($data, $terminate = '') {
+        try {
+
+            $delDomTF = '/true';
+            if ($terminate === 'terminate') {
+                $delDomTF = ($this->params['configoption21'] === 'on') ? '/true' : '/false';
+            }
+
+            $curl = new Curl($this->params);
+            $endPoint = '/api/v1/settings/sysadmin/domain-delete/'.$this->params["domain"].$delDomTF;
+
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'domain-delete');
+            return $response;
+
+        } catch(Exception $e) {
+            logActivity("Error in domain-delete, Error: ".$e->getMessage());
+        }
+    }
+
+
+    /**
+     * User Default
+    */
+    public function domain_userDefault($data) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/user-defaults';
+
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'user-defaults', $tokenDA);
+            return $response;
+
+        } catch(Exception $e) {
+            logActivity("Error in user-defaults, Error: ".$e->getMessage());
+        }
+    }
+
+    /**
+     * Propagate Settings
+    */
+    public function domain_propagateSettings($data) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/propagate-settings';
+
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'propagate-settings', $tokenDA);
+            return $response;
+
+        } catch(Exception $e) {
+            logActivity("Error in propagate-settings, Error: ".$e->getMessage());
         }
     }
 
