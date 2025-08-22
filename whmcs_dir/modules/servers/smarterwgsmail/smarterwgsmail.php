@@ -628,3 +628,54 @@ function smarterwgsmail_UnsuspendAccount($params) {
         logActivity("Error to Unsuspend Account. Error: ".$e->getMessage());
     }
 }
+
+/**
+ * Unsuspend Account
+*/
+function smarterwgsmail_ClientArea(array $params) {
+    try {
+        global $CONFIG;
+        $helper = new Helper($params);
+
+        if($_GET['test'] == 'aman') {
+            echo "<pre>"; print_r($params); die;
+        }
+
+        // Get Domain Data
+        // $getDomainData = $helper->sysadmin_getDomainData();
+        // if($getDomainData['httpcode'] == 200 && ($getDomainData['result']['success'] == 1 || $getDomainData['result']['success'] == true)) {
+        //     $domainData = $getDomainData['result']['domainData'];
+        // } else {
+        //     $domainData = $getDomainData['result']['message'];
+        // }
+
+        // // Get Domain Info
+        // $getDomainInfo = $helper->sysadmin_getDomainInfo();
+        // $license = $getDomainInfo['license'];
+        // $settings = $getDomainInfo['settings'];
+
+        // $assets_link = $CONFIG["SystemURL"] . "/modules/servers/".$params['model']->product->servertype."/assets/";
+
+        // return [
+        //     'templatefile' => "templates/overview.tpl",
+        //     'vars' => [
+        //         'domainData' => $domainData,
+        //         'domainLicense' => $license,
+        //         'domainSettings' => $settings,
+        //         'assets_link' => $assets_link,
+        //     ],
+        // ];
+
+    } catch (Exception $e) {
+        // Record the error in WHMCS's module log.
+        logModuleCall( $params['model']->product->servertype, __FUNCTION__, $params, $e->getMessage(), $e->getTraceAsString());
+
+        // In an error condition, display an error page.
+        return array(
+            'tabOverviewReplacementTemplate' => 'error.tpl',
+            'templateVariables' => array(
+                'usefulErrorHelper' => $e->getMessage(),
+            ),
+        );
+    }
+}

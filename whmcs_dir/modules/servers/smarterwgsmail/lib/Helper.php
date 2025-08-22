@@ -282,4 +282,86 @@ class Helper {
         }
     }
 
+
+    /**
+     * Get Domain Data
+    */
+    public function sysadmin_getDomainData() {
+        try {
+
+            $curl = new Curl($this->params);
+            $endPoint = '/api/v1/settings/sysadmin/domain/'.$this->params['domain'];
+
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'get-domain-data');
+            return $response;
+
+        } catch(Exception $e) {
+            logActivity("Error in propagate-settings, Error: ".$e->getMessage());
+        }
+    }
+
+
+    /**
+     * Get Domain Info
+    */
+    public function sysadmin_getDomainInfo() {
+        try {
+
+            $license = $this->sysadmin_getDomainLicense();
+            $settings = $this->sysadmin_getDomainSettings();
+
+            if($license['httpcode'] == 200 && ($license['result']['success'] == 1 || $license['result']['success'] == true)) {
+                $license_res =  $license['result']['domainSettings'];
+            } else {
+                $license_res = $license['result']['message'];
+            }
+
+            if($settings['httpcode'] == 200 && ($settings['result']['success'] == 1 || $settings['result']['success'] == true)) {
+                $settings_res =  $settings['result']['domainSettings'];
+            } else {
+                $settings_res = $settings['result']['message'];
+            }
+
+            return [
+                'license' => $license_res,
+                'settings' => $settings_res,
+            ];
+
+        } catch(Exception $e) {
+            logActivity("Error in propagate-settings, Error: ".$e->getMessage());
+        }
+    }
+
+    // Get Domain License
+    public function sysadmin_getDomainLicense() {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $endPoint = '/api/v1/licensing/about';
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'domain-license');
+
+            return $response;
+
+        } catch(Exception $e) {
+            logActivity("Error in propagate-settings, Error: ".$e->getMessage());
+        }
+    }
+
+    // Get Domain Settings
+    public function sysadmin_getDomainSettings() {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = 'api/v1/settings/domain/domain';
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'domain-settings', $tokenDA);
+
+            return $response;
+
+        } catch(Exception $e) {
+            logActivity("Error in propagate-settings, Error: ".$e->getMessage());
+        }
+    }
 }
