@@ -359,8 +359,8 @@ function smarterwgsmail_CreateAccount( $params)
         $allocatedEas = max(0, $allocatedEas);
         $allocatedMapi = max(0, $allocatedMapi);
         $maxDomainAliases = max(0, $maxDomainAliases);
-        $maxMailboxSize = max(0, $maxMailboxSize); //
-        $maxDomainSize = max(0, $maxDomainSize); //
+        $maxMailboxSize = max(0, $maxMailboxSize);
+        $maxDomainSize = max(0, $maxDomainSize);
         $maxAliases = max(0, $maxAliases);
         $maxMailingLists = max(0, $maxMailingLists);
 
