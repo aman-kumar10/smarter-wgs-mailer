@@ -35,9 +35,6 @@ function smarterwgsmail_ConfigOptions($params)
 {
     global $whmcs;
 
-    $helper = new Helper($params);
-    $pid = $whmcs->get_req_var('id') ?: null;
-
     $helper = new Helper;
     $helper->create_custom_fields($whmcs->get_req_var('id'));
     $helper->create_config_options($whmcs->get_req_var('id'));
@@ -197,7 +194,7 @@ function smarterwgsmail_ConfigOptions($params)
 /**
  * Test Connection
 */
-function smarterwgsmail_TestConnection( $params)
+function smarterwgsmail_TestConnection($params)
 {
     try {
 
@@ -246,7 +243,7 @@ function smarterwgsmail_TestConnection( $params)
 /**
  * Create Account
 */
-function smarterwgsmail_CreateAccount( $params){
+function smarterwgsmail_CreateAccount($params){
     try {
         // 
         $helper = new Helper($params);
@@ -637,34 +634,107 @@ function smarterwgsmail_ClientArea(array $params) {
         global $CONFIG;
         $helper = new Helper($params);
 
-        if($_GET['test'] == 'aman') {
-            echo "<pre>"; print_r($params); die;
+        // Get domain data
+        $getDomainData = $helper->sysadmin_getDomainData();
+        $getDomainLicense = $helper->sysadmin_getDomainLicense();
+        $getDomainSettings = $helper->sysadmin_getDomainSettings();
+
+        $userAccount = $helper->accountsListSearch('users');
+        $userAliases = $helper->accountsListSearch('aliases');
+
+        $managements = [
+            'userAccount' => [
+                'tabname' => "User Account",
+                'attID' => 'userAccount',
+                'attFaCls' => 'fa-user',
+                'isData' => $userAccount['isData'],
+                'response' => $userAccount['responseData']
+            ],
+            'userAliases' => [
+                'tabname' => "User Aliases",
+                'attID' => 'userAliases',
+                'attFaCls' => 'fa-random',
+                'isData' => $userAliases['isData'],
+                'response' => $userAliases['responseData']
+            ],
+            'addUser' => [
+                'tabname' => "Add User",
+                'attID' => 'addUser',
+                'attFaCls' => 'fa-user-plus',
+                'isData' => 1,
+                'response' => 'yes'
+            ],
+            'addAlias' => [
+                'tabname' => "Add Alias",
+                'attID' => 'addAlias',
+                'attFaCls' => 'fa-plus',
+                'isData' => 1,
+                'response' => 'no'
+            ],
+            'logInToWebmail' => [
+                'tabname' => "Log In To Webmail",
+                'attID' => 'logInToWebmail',
+                'attFaCls' => 'fa-sign-in',
+                'isData' => 1,
+                'response' => 'yes'
+            ],
+        ];
+
+
+        $vars = [
+            'assets_link' => $CONFIG["SystemURL"] . "/modules/servers/" . $params['model']->product->servertype . "/assets/",
+            'managements' => $managements
+        ];
+
+
+        // Format each dataset before assigning
+        if (!empty($getDomainData)) {
+            $formatted = [];
+            foreach ($getDomainData as $label => $value) {
+                $formatted[$helper->labelFormat($label)] = $value;
+            }
+            $vars['domainData'] = $formatted;
+        } else {
+            $vars['domainDataError'] = "Error to get the data, something went wrong.";
         }
 
-        // Get Domain Data
-        // $getDomainData = $helper->sysadmin_getDomainData();
-        // if($getDomainData['httpcode'] == 200 && ($getDomainData['result']['success'] == 1 || $getDomainData['result']['success'] == true)) {
-        //     $domainData = $getDomainData['result']['domainData'];
-        // } else {
-        //     $domainData = $getDomainData['result']['message'];
-        // }
+        if (!empty($getDomainLicense)) {
+            $formatted = [];
+            foreach ($getDomainLicense as $label => $value) {
+                $formatted[$helper->labelFormat($label)] = $value;
+            }
+            $vars['domainLicense'] = $formatted;
+        } else {
+            $vars['domainLicenseError'] = "Error to get the license, something went wrong.";
+        }
 
-        // // Get Domain Info
-        // $getDomainInfo = $helper->sysadmin_getDomainInfo();
-        // $license = $getDomainInfo['license'];
-        // $settings = $getDomainInfo['settings'];
+        if (!empty($getDomainSettings)) {
+            $formatted = [];
+            foreach ($getDomainSettings as $label => $value) {
+                $formatted[$helper->labelFormat($label)] = $value;
+            }
+            $vars['domainSettings'] = $formatted;
+        } else {
+            $vars['domainSettingsError'] = "Error to get the settings, something went wrong.";
+        }
 
-        // $assets_link = $CONFIG["SystemURL"] . "/modules/servers/".$params['model']->product->servertype."/assets/";
+        // Handle case where all empty
+        if (empty($getDomainData) && empty($getDomainLicense) && empty($getDomainSettings)) {
+            $vars = [
+                'assets_link' => $CONFIG["SystemURL"] . "/modules/servers/" . $params['model']->product->servertype . "/assets/",
+                'noResponse'  => "Error to get the data, something went wrong.",
+            ];
+        }
 
-        // return [
-        //     'templatefile' => "templates/overview.tpl",
-        //     'vars' => [
-        //         'domainData' => $domainData,
-        //         'domainLicense' => $license,
-        //         'domainSettings' => $settings,
-        //         'assets_link' => $assets_link,
-        //     ],
-        // ];
+        if($_GET['test'] == 'aman') {
+            echo "<pre>"; print_r($vars); die;
+        }
+
+        return [
+            'templatefile' => "templates/overview.tpl",
+            'vars' => $vars,
+        ];
+
 
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
@@ -679,3 +749,149 @@ function smarterwgsmail_ClientArea(array $params) {
         );
     }
 }
+
+
+/**
+ * ClientArea Buttons
+*/
+// function smarterwgsmail_ClientAreaCustomButtonArray($params){
+//     try {
+//         $helper = new Helper($params);
+//         $domainInfo = $helper->sysadmin_getDomainInfo();
+//         $capabilities = $domainInfo['settings'] ?? [];
+
+//         $buttonarray = [
+//             "Manage Users" => "manageusers",
+//             "Manage Aliases" => "managealiases",
+//         ];
+
+//         if (!empty($capabilities['enableMapiEwsAccountManagement'])) {
+//             $buttonarray["Manage MAPI/EWS Licenses"] = "manageewslicenses";
+//         }
+
+//         if (!empty($capabilities['enableActiveSyncAccountManagement'])) {
+//             $buttonarray["Manage EAS Licenses"] = "manageeaslicenses";
+//         }
+
+//         if (!empty($capabilities['showListMenu'])) {
+//             $buttonarray["Manage Mailing Lists"] = "managemailinglists";
+//         }
+
+//         if (!empty($capabilities['showDomainAliasMenu'])) {
+//             $buttonarray["Manage Domain Aliases"] = "managedomainaliases";
+//         }
+
+//         $buttonarray["Add User"] = "addsmartermailuser";
+//         $buttonarray["Add Alias"] = "addsmartermailalias";
+//         $buttonarray["Login to Webmail"] = "opensmartermail";
+
+//         return $buttonarray;
+
+//     } catch (Exception $e) {
+//         logActivity("Error in clientarea buttons. Error: " . $e->getMessage());
+//     }
+// }
+
+
+/**
+ * ClientArea -- Manage Users
+*/
+// function smarterwgsmail_manageusers($params) 
+// {
+//     try {
+
+//         $helper = new Helper($params);
+
+//         $inputData = array(
+//             'search' => null,
+//             'searchFlags' => array('users'),
+//             'skip' => 0,
+//             'take' => 99999,
+//             'sortField' => 'userName'
+//         );
+    
+//         $accountsListSearch = $helper->accountsListSearch($inputData);
+//         if($accountsListSearch['httpcode'] != 200 && ($accountsListSearch['result']['success'] != 1 || $accountsListSearch['result']['success'] != true)) {
+//             if(isset($accountsListSearch['result']['message']) && !empty($accountsListSearch['result']['message'])) {
+//                 return $accountsListSearch['result']['message'];
+//             } else {
+//                 return "An error has occurred.";
+//             }
+//         }
+    
+//         $users = [];
+
+//         foreach ($accountsListSearch['result']['results'] as $account) {
+//             if ($account['accountType'] == 5 || $account['accountType'] == 4) {
+//                 continue;
+//             }
+
+//             $lastLoginStr = date("Y-m-d", strtotime($account['lastLogin']));
+//             $account['lastLoginStr'] = str_contains($lastLoginStr, "1969") ? "N/A" : $lastLoginStr;
+
+//             $users[] = $account;
+//         }
+
+//         return [
+//             'templatefile' => 'manageusers',
+//             'breadcrumb' => ' > <a href="#">Manage Users</a>',
+//             'vars' => [
+//                 'users' => $users,
+//                 'domainName' => $params["domain"],
+//             ]
+//         ];
+
+//     } catch(Exception $e) {
+//         logActivity("Error in manageusers button. Error: ".$e->getMessage());
+//     }
+// }
+
+
+/**
+ * ClientArea -- Manage Aliases
+*/
+// function smarterwgsmail_managealiases($params) {
+//     try {
+
+//         $helper = new Helper($params);
+
+//         $inputData = [
+//             'search' => null,
+//             'searchFlags' => ['aliases'],
+//             'skip' => 0,
+//             'take' => 99999,
+//             'sortField' => 'userName'
+//         ];
+    
+//         $accountsListSearch = $helper->accountsListSearch($inputData);
+//         if($accountsListSearch['httpcode'] != 200 && ($accountsListSearch['result']['success'] != 1 || $accountsListSearch['result']['success'] != true)) {
+//             if(isset($accountsListSearch['result']['message']) && !empty($accountsListSearch['result']['message'])) {
+//                 return $accountsListSearch['result']['message'];
+//             } else {
+//                 return "An error has occurred.";
+//             }
+//         }
+    
+//         $aliases = [];
+
+//         foreach ($accountsListSearch['result']['results'] as $account) {
+
+//             if ($account['accountType'] == 4) {
+//                 $aliases[] = $account;
+//             }
+
+//         }
+
+//         return [
+//             'templatefile' => 'managealiases',
+//             'breadcrumb' => ' > <a href="#">Manage Aliases</a>',
+//             'vars' => [
+//                 'aliases' => $aliases,
+//                 'domainName' => $params["domain"],
+//             ]
+//         ];
+
+//     } catch(Exception $e) {
+//         logActivity("Error in managealias button. Error: ".$e->getMessage());
+//     }
+// }

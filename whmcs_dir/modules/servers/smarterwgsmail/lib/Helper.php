@@ -293,44 +293,18 @@ class Helper {
             $endPoint = '/api/v1/settings/sysadmin/domain/'.$this->params['domain'];
 
             $response = $curl->curlCall($endPoint, (object)[], 'GET', 'get-domain-data');
-            return $response;
+
+            if($response['httpcode'] == 200) {
+                return  $response['result']['domainData'];
+            } else {
+                return $response['result']['message'];
+            }
 
         } catch(Exception $e) {
             logActivity("Error in propagate-settings, Error: ".$e->getMessage());
         }
     }
 
-
-    /**
-     * Get Domain Info
-    */
-    public function sysadmin_getDomainInfo() {
-        try {
-
-            $license = $this->sysadmin_getDomainLicense();
-            $settings = $this->sysadmin_getDomainSettings();
-
-            if($license['httpcode'] == 200 && ($license['result']['success'] == 1 || $license['result']['success'] == true)) {
-                $license_res =  $license['result']['domainSettings'];
-            } else {
-                $license_res = $license['result']['message'];
-            }
-
-            if($settings['httpcode'] == 200 && ($settings['result']['success'] == 1 || $settings['result']['success'] == true)) {
-                $settings_res =  $settings['result']['domainSettings'];
-            } else {
-                $settings_res = $settings['result']['message'];
-            }
-
-            return [
-                'license' => $license_res,
-                'settings' => $settings_res,
-            ];
-
-        } catch(Exception $e) {
-            logActivity("Error in propagate-settings, Error: ".$e->getMessage());
-        }
-    }
 
     // Get Domain License
     public function sysadmin_getDomainLicense() {
@@ -341,7 +315,11 @@ class Helper {
             $endPoint = '/api/v1/licensing/about';
             $response = $curl->curlCall($endPoint, (object)[], 'GET', 'domain-license');
 
-            return $response;
+            if($response['httpcode'] == 200) {
+                return  $response['result'];
+            } else {
+                return $response['result']['message'];
+            }
 
         } catch(Exception $e) {
             logActivity("Error in propagate-settings, Error: ".$e->getMessage());
@@ -355,13 +333,64 @@ class Helper {
             $curl = new Curl($this->params);
 
             $tokenDA = $this->apiLoginDAtoken($this->params);
-            $endPoint = 'api/v1/settings/domain/domain';
+            $endPoint = '/api/v1/settings/domain/domain';
             $response = $curl->curlCall($endPoint, (object)[], 'GET', 'domain-settings', $tokenDA);
 
-            return $response;
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result']['domainSettings'];
+            } else {
+                return $response['result']['message'];
+            }
 
         } catch(Exception $e) {
             logActivity("Error in propagate-settings, Error: ".$e->getMessage());
+        }
+    }
+
+    /**
+     * Label Formatting
+    */
+    public function labelFormat($string) {
+        $string = str_replace('_', ' ', $string);
+
+        // Add space before camelCase
+        $string = preg_replace('/([a-z])([A-Z])/', '$1 $2', $string);
+
+        // Capitalize each word
+        return ucwords($string);
+    }
+
+    // 
+    public function accountsListSearch($for){
+        try {
+            $curl = new Curl($this->params);
+
+            $data = [
+                'search' => null,
+                'searchFlags' => [$for],
+                'skip' => 0,
+                'take' => 99999,
+                'sortField' => 'userName'
+            ];
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/account-list-search';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'account-list-search', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return [
+                    'isData' => 1,
+                    'responseData' => $response['result']['results']
+                ];
+            } else {
+                return [
+                    'isData' => 0,
+                    'responseData' => !empty($response['result']['message']) ? $response['result']['message'] : "No data found for {$for}" 
+                ];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in acount-list-search. Error: ".$e->getMessage());
         }
     }
 }

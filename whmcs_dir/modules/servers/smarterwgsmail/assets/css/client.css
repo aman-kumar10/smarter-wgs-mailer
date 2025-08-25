@@ -1,0 +1,72 @@
+.clientarea-output {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 20px;
+    background: #fff; 
+}
+
+.clientarea-output .nav-tabs {
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 15px;
+}
+
+.clientarea-output .nav-tabs .nav-item {
+    margin-bottom: -1px; 
+}
+
+.clientarea-output .nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    padding: 8px 14px;
+}
+
+.clientarea-output .nav-tabs .nav-link.active {
+    border-color: #ddd #ddd #fff; 
+    background: #fff;
+}
+
+.clientarea-output #managementLinks.nav-tabs {
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 12px;
+}
+
+.clientarea-output #managementLinks .nav-item {
+    margin-right: 5px;
+}
+
+.clientarea-output #managementLinks .nav-link {
+    border: 1px solid transparent;
+    border-radius: 4px 4px 0 0;
+    padding: 6px 12px;
+}
+
+.clientarea-output #managementLinks .nav-link.active {
+    border-color: #ddd #ddd #fff;
+    background: #fff;
+}
+
+.clientarea-output .tab-content {
+    border: 1px solid #ddd;
+    border-radius: 0 0 6px 6px;
+    padding: 15px;
+    text-align: left;
+}
+
+.clientarea-output .tab-content .row {
+    padding: 8px 0;
+    border-bottom: 1px solid #dddddd;
+}
+
+.clientarea-output .tab-content .row:last-child {
+    border-bottom: none;
+}
+
+.clientarea-output .tab-content .col-sm-5 strong {
+    display: inline-block;
+    min-width: 140px;
+}
+#managementLinks .management-link {
+    color: #2a8fce;
+}
