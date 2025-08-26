@@ -343,7 +343,7 @@ class Helper {
             }
 
         } catch(Exception $e) {
-            logActivity("Error in propagate-settings, Error: ".$e->getMessage());
+            logActivity("Error in domain-settings, Error: ".$e->getMessage());
         }
     }
 
@@ -360,7 +360,7 @@ class Helper {
         return ucwords($string);
     }
 
-    // 
+    // Account list search (Users & Aliases)
     public function accountsListSearch($for){
         try {
             $curl = new Curl($this->params);
@@ -379,18 +379,37 @@ class Helper {
 
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
                 return [
-                    'isData' => 1,
                     'responseData' => $response['result']['results']
                 ];
             } else {
                 return [
-                    'isData' => 0,
                     'responseData' => !empty($response['result']['message']) ? $response['result']['message'] : "No data found for {$for}" 
                 ];
             }
 
         } catch(Exception $e) {
             logActivity("Error in acount-list-search. Error: ".$e->getMessage());
+        }
+    }
+
+    // 
+    public function managementAddUserPassReq() {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/password-requirements';
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'password-requirements', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result'];
+            } else {
+                return !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'No password requirements found.';
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in password-requirements, Error: ".$e->getMessage());
         }
     }
 }

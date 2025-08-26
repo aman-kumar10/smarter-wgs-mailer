@@ -632,8 +632,13 @@ function smarterwgsmail_UnsuspendAccount($params) {
 function smarterwgsmail_ClientArea(array $params) {
     try {
         global $CONFIG;
+        global $whmcs;
         $helper = new Helper($params);
 
+        $vars = [];
+        $vars['activePage'] = null;
+
+// // *****************************************************************************************************************************************
         // Get domain data
         $getDomainData = $helper->sysadmin_getDomainData();
         $getDomainLicense = $helper->sysadmin_getDomainLicense();
@@ -642,50 +647,106 @@ function smarterwgsmail_ClientArea(array $params) {
         $userAccount = $helper->accountsListSearch('users');
         $userAliases = $helper->accountsListSearch('aliases');
 
+        $addUserPassReq = $helper->managementAddUserPassReq();
+        $maxSizeMB = $getDomainSettings['maxSize'] / 1024 / 1024;
+        if ($maxSizeMB == 0) {
+            $maxSizeMB = 999999;
+        }
+
+        $managements = [];
+
+        // ---------------------************---------------------
+        // if($getDomainSettings['enableMapiEwsAccountManagement']) {
+        //     $manageEwsLicenses = $helper->manageEwsLicenses();
+        //     $managements["manageEwsLicenses"] = [];
+        // }
+        // if($getDomainSettings['enableActiveSyncAccountManagement']) {
+        //     $manageEasLicenses = $helper->manageEasLicenses();
+        //     $managements["manageEasLicenses"] = [];
+        // }
+        // if($getDomainSettings['showListMenu']) {
+        //     $manageMailingLists = $helper->manageMailingLists();
+        //     $managements["manageMailingLists"] = [];
+        // }
+        // if($getDomainSettings['showDomainAliasMenu']) {
+        //     $manageDomainAliases = $helper->manageDomainAliases();
+        //     $managements["manageDomainAliases"] = [];
+        // }
+        // ---------------------************---------------------
+
+
         $managements = [
             'userAccount' => [
                 'tabname' => "User Account",
                 'attID' => 'userAccount',
                 'attFaCls' => 'fa-user',
-                'isData' => $userAccount['isData'],
-                'response' => $userAccount['responseData']
             ],
             'userAliases' => [
                 'tabname' => "User Aliases",
                 'attID' => 'userAliases',
                 'attFaCls' => 'fa-random',
-                'isData' => $userAliases['isData'],
-                'response' => $userAliases['responseData']
             ],
             'addUser' => [
                 'tabname' => "Add User",
                 'attID' => 'addUser',
                 'attFaCls' => 'fa-user-plus',
-                'isData' => 1,
-                'response' => 'yes'
             ],
             'addAlias' => [
                 'tabname' => "Add Alias",
                 'attID' => 'addAlias',
                 'attFaCls' => 'fa-plus',
-                'isData' => 1,
-                'response' => 'no'
             ],
             'logInToWebmail' => [
                 'tabname' => "Log In To Webmail",
                 'attID' => 'logInToWebmail',
                 'attFaCls' => 'fa-sign-in',
-                'isData' => 1,
-                'response' => 'yes'
             ],
         ];
 
 
+// // *****************************************************************************************************************************************
+
+        $requestedPage = !empty($whmcs->get_req_var('page')) ? $whmcs->get_req_var('page') : 'overview';
+        switch ($requestedPage) {
+                case 'userAccount':
+                    $templateFile = 'templates/userdetails.tpl';
+                    $managements['userAccount']['response'] = $userAccount['responseData'];
+                    $vars['activePage'] = 'userAccount';
+                    break;
+                case 'userAlias':
+                    $templateFile = 'templates/aliasdetails.tpl';
+                    $managements['userAliases']['response'] = $userAliases['responseData'];
+                    $vars['activePage'] = 'userAlias';
+                    break;
+                case 'addUser':
+                    $templateFile = 'templates/smartermailadduser.tpl';
+                    $managements['addUser']['response'] = [
+                        'domainName' => $params["domain"],
+                        'canEditSize' => $getDomainSettings['allowUserSizeChanging'],
+                        'adIntegration' => $getDomainSettings['activeDirectoryIntegration'],
+                        'passReqs' => $addUserPassReq,
+                        'maxSizeMB' => $maxSizeMB
+                    ];
+                    $vars['activePage'] = 'addUser';
+                    break;
+                case 'addAlias':
+                    $templateFile = 'templates/smartermailaddalias.tpl';
+                    $vars['activePage'] = 'addAlias';
+                    break;
+                case 'logInToWebmail':
+                    $templateFile = 'templates/webmaillogin.tpl';
+                    $vars['activePage'] = 'logInToWebmail';
+                    break;
+                default:
+                    $templateFile = 'templates/overview.tpl';
+            }
+
         $vars = [
             'assets_link' => $CONFIG["SystemURL"] . "/modules/servers/" . $params['model']->product->servertype . "/assets/",
-            'managements' => $managements
+            'managements' => $managements,
+            'template_dir' => "modules/servers/".$params['model']."/templates",
+            "service_id" => $params['serviceid'],
         ];
-
 
         // Format each dataset before assigning
         if (!empty($getDomainData)) {
@@ -731,7 +792,7 @@ function smarterwgsmail_ClientArea(array $params) {
         }
 
         return [
-            'templatefile' => "templates/overview.tpl",
+            'templatefile' => $templateFile,
             'vars' => $vars,
         ];
 

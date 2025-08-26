@@ -70,3 +70,5 @@
 #managementLinks .management-link {
     color: #2a8fce;
 }
+/* #managementLinks,
+#managementsTab + .tab-content { display:none; } */

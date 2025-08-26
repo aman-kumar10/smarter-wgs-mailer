@@ -82,14 +82,68 @@
             <ul class="nav nav-tabs responsive-tabs-sm" id="managementLinks">
                 {foreach $managements as $management}
                     <li class="nav-item">
-                        <a href="{if $management.attID}/clientarea.php?action=productdetails&id={$service_id}&page={$management.attID}{else}#{/if}" data-toggle="tab" class="nav-link management-link">
-                            <i class="fas {$management.attFaCls} fa-fw"></i> {$management.tabname}
-                        </a>
+                        {if $activePage && $activePage eq $management.attID}
+                            <a href="#{$management.attID}"
+                            data-toggle="tab"
+                            class="nav-link management-link active">
+                                <i class="fas {$management.attFaCls} fa-fw"></i> {$management.tabname}
+                            </a>
+                        {elseif !$activePage && $management@first}
+                            <a href="#{$management.attID}"
+                            data-toggle="tab"
+                            class="nav-link management-link active">
+                                <i class="fas {$management.attFaCls} fa-fw"></i> {$management.tabname}
+                            </a>
+                        {else}
+                            <a href="/clientarea.php?action=productdetails&id={$service_id}&page={$management.attID}"
+                            class="nav-link management-link">
+                                <i class="fas {$management.attFaCls} fa-fw"></i> {$management.tabname}
+                            </a>
+                        {/if}
                     </li>
                 {/foreach}
             </ul>
+
+
+            <div class="tab-content mt-3">
+                {foreach $managements as $management}
+                    <div class="tab-pane fade
+                                {if $activePage && $activePage eq $management.attID}
+                                    show active
+                                {elseif !$activePage && $management@first}
+                                    show active
+                                {/if}" 
+                        role="tabpanel" 
+                        id="{$management.attID}">
+
+                        {if isset($management.response)}
+                            {if is_array($management.response) && $management.response|@count > 0}
+                                {foreach $management.response as $resp}
+                                    {foreach from=$resp key=label item=value}
+                                        <div class="row">
+                                            <div class="col-sm-5 text-left"><strong>{$label}</strong></div>
+                                            <div class="col-sm-7 text-left">
+                                                {if $value|trim == ''}-{else}{$value}{/if}
+                                            </div>
+                                        </div>
+                                    {/foreach}
+                                {/foreach}
+                            {elseif $management.response != ''}
+                                <div class="alert alert-danger">{$management.response}</div>
+                            {else}
+                                <div class="alert alert-warning">No data found.</div>
+                            {/if}
+                        {else}
+                            <div class="alert alert-warning">No data found.</div>
+                        {/if}
+
+                    </div>
+                {/foreach}
+            </div>
         </div>
         {/if}
+
+        
 
     </div>
 
