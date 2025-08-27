@@ -375,7 +375,7 @@ class Helper {
 
             $tokenDA = $this->apiLoginDAtoken($this->params);
             $endPoint = '/api/v1/settings/domain/account-list-search';
-            $response = $curl->curlCall($endPoint, $data, 'POST', 'account-list-search', $tokenDA);
+            $response = $curl->curlCall($endPoint, $data, 'POST', "account-list-search-{$for}", $tokenDA);
 
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
                 return [
@@ -388,7 +388,7 @@ class Helper {
             }
 
         } catch(Exception $e) {
-            logActivity("Error in acount-list-search. Error: ".$e->getMessage());
+            logActivity("Error in account-list-search-{$for}. Error: ".$e->getMessage());
         }
     }
 
@@ -410,6 +410,125 @@ class Helper {
 
         } catch(Exception $e) {
             logActivity("Error in password-requirements, Error: ".$e->getMessage());
+        }
+    }
+
+
+    // domain User put
+    public function domainUserPut($data){
+        try {
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/user-put/';
+            $response = $curl->curlCall($endPoint, $data, 'POST', "domain-user-put", $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return [
+                    'status' => 'success',
+                    'response' => $response['result']
+                ];
+            } else {
+                return [
+                    'status' => 'error',
+                    'response' => !empty($response['result']['message']) ? $response['result']['message'] : "Error to put alias."
+                ];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in domain-user-put. Error: ".$e->getMessage());
+        }
+    }
+
+    // domain Alias put
+    public function domainAliasPut($data){
+        try {
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/alias-put/';
+            $response = $curl->curlCall($endPoint, $data, 'POST', "alias-put", $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return [
+                    'status' => 'success',
+                    'response' => $response['result']
+                ];
+            } else {
+                return [
+                    'status' => 'error',
+                    'response' => !empty($response['result']['message']) ? $response['result']['message'] : "Error to put alias."
+                ];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in alias-put. Error: ".$e->getMessage());
+        }
+    }
+
+    // get mailing list
+    public function getMailingLists() {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/mailing-lists/list';
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'domain-settings', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result']['items'];
+            } else {
+                return $response['result']['message'];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in domain-settings, Error: ".$e->getMessage());
+        }
+    }
+
+    // get mailing list
+    public function getdomainAliases() {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/domain-aliases';
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'domain-aliases', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result']['domainAliasData'];
+            } else {
+                return $response['result']['message'];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in domain-aliases, Error: ".$e->getMessage());
+        }
+    }
+
+    // get webmail login
+    public function getWebmailLoginURL($admin) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $data = [
+                'username' => $admin,
+                'domain' => $this->params['domain'],
+            ];
+            $endPoint = '/api/v1/auth/retrieve-login-token';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'retrieve-login-token');
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result']['autoLoginUrl'];
+            } else {
+                return $response['result']['message'];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in retrieve-login-token, Error: ".$e->getMessage());
         }
     }
 }

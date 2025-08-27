@@ -1,74 +1,64 @@
-.clientarea-output {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 15px;
+/* Unique styling to avoid Bootstrap conflicts */
+.custom-clientarea {
     margin-top: 20px;
-    background: #fff; 
+    font-family: Arial, sans-serif;
 }
 
-.clientarea-output .nav-tabs {
-    border-bottom: 1px solid #ccc;
-    margin-bottom: 15px;
+/* Tabs */
+.custom-nav-tabs, .custom-sub-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    border-bottom: 2px solid #eee;
 }
 
-.clientarea-output .nav-tabs .nav-item {
-    margin-bottom: -1px; 
+.custom-nav-item, .custom-sub-item {
+    margin-right: 10px;
 }
 
-.clientarea-output .nav-tabs .nav-link {
-    border: 1px solid transparent;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-    padding: 8px 14px;
-}
-
-.clientarea-output .nav-tabs .nav-link.active {
-    border-color: #ddd #ddd #fff; 
-    background: #fff;
-}
-
-.clientarea-output #managementLinks.nav-tabs {
-    border-bottom: 1px solid #ccc;
-    margin-bottom: 12px;
-}
-
-.clientarea-output #managementLinks .nav-item {
-    margin-right: 5px;
-}
-
-.clientarea-output #managementLinks .nav-link {
-    border: 1px solid transparent;
-    border-radius: 4px 4px 0 0;
-    padding: 6px 12px;
-}
-
-.clientarea-output #managementLinks .nav-link.active {
-    border-color: #ddd #ddd #fff;
-    background: #fff;
-}
-
-.clientarea-output .tab-content {
-    border: 1px solid #ddd;
-    border-radius: 0 0 6px 6px;
-    padding: 15px;
-    text-align: left;
-}
-
-.clientarea-output .tab-content .row {
-    padding: 8px 0;
-    border-bottom: 1px solid #dddddd;
-}
-
-.clientarea-output .tab-content .row:last-child {
-    border-bottom: none;
-}
-
-.clientarea-output .tab-content .col-sm-5 strong {
+.custom-nav-link {
     display: inline-block;
-    min-width: 140px;
+    padding: 10px 15px;
+    text-decoration: none;
+    background: #f7f7f7;
+    border-radius: 6px 6px 0 0;
+    color: #333;
+    transition: 0.3s;
 }
-#managementLinks .management-link {
-    color: #2a8fce;
+.custom-sub-link {
+    display: inline-block;
+    padding: 10px 15px;
+    text-decoration: none;
+    background: #f7f7f7;
+    border-radius: 6px 6px 0 0;
+    color: #007bff;
+    transition: 0.3s;
 }
-/* #managementLinks,
-#managementsTab + .tab-content { display:none; } */
+
+.custom-nav-link.active, 
+.custom-nav-link:hover {
+    background: #007bff;
+    color: #fff;
+}
+.custom-sub-link.active,
+.custom-sub-link:hover {
+    background: #007bff6b;
+    color: #184676;
+}
+
+/* Content */
+.custom-tab-content, .custom-sub-tab-content {
+    padding: 20px;
+    border: 1px solid #eee;
+    border-top: none;
+    background: #fff;
+    min-height: 35px;
+}
+
+/* Loader */
+.custom-loader {
+    text-align: center;
+    font-weight: bold;
+    padding: 20px;
+}
