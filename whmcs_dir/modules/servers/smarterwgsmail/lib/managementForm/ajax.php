@@ -68,8 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
         if (!empty($userData['status']) && $userData['status'] === 'success') {
             $html = '<div class="alert alert-success">User created successfully</div>';
         } else {
-            $msg = !empty($userData['response']) ? $userData['response'] : 'User creation failed';
-            $html = '<div class="alert alert-danger">' . htmlspecialchars($msg) . '</div>';
+            if(!empty(trim($userData['response']))) {
+                if(strpos($userData['response'], 'LIMIT_EXCEEDED')) {
+                    // $html = '<div class="alert alert-danger">' . htmlspecialchars($userData['response']) . ' <a href="upgrade.php?type=package&id='.$serviceId.'" class="btn btn-success" style="background: green;">Upgrade Plan?</a></div>';
+                    $html = '<div class="alert alert-danger">' . htmlspecialchars($userData['response']) . '</div>';
+                }
+            } else {
+                $html = '<div class="alert alert-danger">User creation failed</div>';
+            }
         }
     }
 

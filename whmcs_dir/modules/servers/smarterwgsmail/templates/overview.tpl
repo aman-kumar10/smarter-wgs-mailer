@@ -16,15 +16,23 @@
         </li>
 
         {if $managements}
-        <li class="custom-nav-item">
-            <a href="managementsTab" id="managementsTab" data-serviceid="{$serviceid}" class="custom-nav-link"><i class="fas fa-tasks fa-fw"></i> Managements</a>
-        </li>
+            <li class="custom-nav-item">
+                <a href="managementsTab" id="managementsTab" data-serviceid="{$serviceid}" class="custom-nav-link"><i class="fas fa-tasks fa-fw"></i> Managements</a>
+            </li>
+        {/if}
+
+        {if $logInToWebmail}
+            <li class="custom-nav-item">
+                <a href="{$logInToWebmail.href}" id="{$logInToWebmail.attID}" data-serviceid="{$serviceid}" class="custom-nav-link" title="{$logInToWebmail.tabname}"><i class="fas {$logInToWebmail.attFaCls} fa-fw"></i> Login</a>
+            </li>
         {/if}
     </ul>
 
     {* Loader *}
     <div class="custom-tab-content">
-        <div id="custom-loader" class="custom-loader" style="display:none;">Loading...</div>
+        <div id="custom-loader" class="custom-loader" style="display:none;">
+            <div class="custom-spinner"></div>
+        </div>
         <div id="custom-tab-response" class="custom-tab-response"></div>
     </div>
 
@@ -42,7 +50,9 @@
             {/foreach}
         </ul>
         <div class="custom-sub-tab-content">
-            <div id="custom-sub-loader" class="custom-loader" style="display:none;">Loading...</div>
+            <div id="custom-sub-loader" class="custom-loader" style="display:none;">
+                <div class="custom-spinner"></div>
+            </div>
             <div id="custom-sub-formresponse" class="custom-tab-formresponse"></div>
             <div id="custom-sub-response" class="custom-tab-response"></div>
         </div>

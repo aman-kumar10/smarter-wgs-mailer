@@ -36,33 +36,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
     $helper = new Helper($params);
 
 
-    // Display Users
+    // Get Users
     if($tab == 'userAccount') {
         $userData = $helper->accountsListSearch('users');
     }
 
-    // Display Aliases
+    // Get Aliases
     if($tab == 'userAliases') {
         $userData = $helper->accountsListSearch('aliases');
     }
 
+    // --- Display Users & Alias data in ---
     if (is_array($userData['responseData'][0])) {
         if (!empty($userData['responseData'][0])) {
             $formattedData = [];
             foreach ($userData['responseData'][0] as $label => $value) {
+                if (is_array($value) || is_object($value) || (is_null($value) || trim((string) $value) === '')) {
+                    continue;
+                }
                 $formattedData[$helper->labelFormat($label)] = $value;
             }
 
             $html = '';
             foreach ($formattedData as $label => $value) {
-                $displayValue = (is_null($value) || trim((string) $value) === '') ? '-' : $value;
+                if (is_null($value) || trim((string) $value) === '') {
+                    continue;
+                }
+
+                if ($value === true) {
+                    $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
+                } elseif ($value === false) {
+                    $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
+                } else {
+                    $displayValue = htmlspecialchars((string) $value);
+                }
+
                 $html .= '
                     <div class="row mb-2">
                         <div class="col-sm-5 text-left">
                             <strong>' . htmlspecialchars($label) . '</strong>
                         </div>
                         <div class="col-sm-7 text-left">
-                            ' . htmlspecialchars((string) $displayValue) . '
+                            ' . $displayValue . '
                         </div>
                     </div>
                 ';
@@ -75,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
     } else {
         $html = '<div class="alert alert-warning">No data found</div>';
     }
+
 
     // Add User Form
     if ($tab == 'addUser') {
@@ -691,24 +707,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             $html = '<div class="alert alert-warning">No data found</div>';
         }
     }
-
-    // For Form Values
-    if($tab == 'logInToWebmail') {
-
-        $domainSettings = $helper->sysadmin_getDomainSettings();
-
-        $loginUrl = $helper->getWebmailLoginURL(!empty($domainSettings['mainDomainAdmin']) ? $domainSettings['mainDomainAdmin'] : '');
-
-        if(!empty($loginUrl)) {
-            $html = '<div class="alert alert-success"><a target="_blank" href="'.$loginUrl.'" class="btn btn-primary">Login</a></div>';
-        } else {
-            $html = '<div class="alert alert-warning">Unable to generate URL</div>';
-        }
-
-
-    }
-
-
 
 
     header('Content-Type: text/html; charset=UTF-8');

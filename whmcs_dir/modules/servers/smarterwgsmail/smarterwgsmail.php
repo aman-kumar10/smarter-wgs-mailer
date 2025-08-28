@@ -530,7 +530,7 @@ function smarterwgsmail_CreateAccount($params){
 
         
     } catch(Exception $e) {
-        logActivity("Error to Create Account for SmarterWgsMail. Error: ".$e->getMessage());
+        logActivity("Error to Create Account for SmarterWgsMail, service #".$params['serviceid']." Error: ".$e->getMessage());
     }
 }
 
@@ -560,7 +560,7 @@ function smarterwgsmail_TerminateAccount($params) {
         return "success"; 
 
     } catch(Exception $e) {
-        logActivity("Error to Suspend Account. Error: ".$e->getMessage());
+        logActivity("Error to Suspend Account, service #".$params['serviceid']." Error: ".$e->getMessage());
     }
 }
 
@@ -591,7 +591,7 @@ function smarterwgsmail_SuspendAccount($params) {
         return "success"; 
 
     } catch(Exception $e) {
-        logActivity("Error to Suspend Account. Error: ".$e->getMessage());
+        logActivity("Error to Suspend Account, service #".$params['serviceid']." Error: ".$e->getMessage());
     }
 }
 
@@ -622,12 +622,14 @@ function smarterwgsmail_UnsuspendAccount($params) {
         return "success"; 
 
     } catch(Exception $e) {
-        logActivity("Error to Unsuspend Account. Error: ".$e->getMessage());
+        logActivity("Error to Unsuspend Account, , service #".$params['serviceid'].". Error: ".$e->getMessage());
     }
 }
 
 
-// clientarea
+/**
+ * ClientArea Output
+*/
 function smarterwgsmail_ClientArea(array $params) {
     try {
 
@@ -636,37 +638,51 @@ function smarterwgsmail_ClientArea(array $params) {
 
         $getDomainSettings = $helper->sysadmin_getDomainSettings();
 
+        // Webmail Login URL
+        $loginUrl = $helper->getWebmailLoginURL(!empty($getDomainSettings['mainDomainAdmin']) ? $getDomainSettings['mainDomainAdmin'] : '');
+        if(!empty($loginUrl['url'])) {
+            $webmailLoginUrl = $loginUrl['url'];
+        } 
+
+        $logInToWebmail = [
+            'tabname' => "Log In To Webmail",
+            'attID' => 'logInToWebmail',
+            'href' => $webmailLoginUrl ?? '#',
+            'attFaCls' => 'fa-sign-in',
+        ];
+        
+        // get other management tabs 
         $managements = [];
-
-        if($getDomainSettings['enableMapiEwsAccountManagement']) {
-            $managements["manageEwsLicenses"] = [
-                'tabname' => "Manage EWS Licenses",
-                'attID' => 'manageEwsLicenses',
-                'attFaCls' => 'fa-tasks',
-            ];
-        }
-        if($getDomainSettings['enableActiveSyncAccountManagement']) {
-            $managements["manageEasLicenses"] = [
-                'tabname' => "Manage EAS Licenses",
-                'attID' => 'manageEasLicenses',
-                'attFaCls' => 'fa-sitemap',
-            ];
-        }
-        if($getDomainSettings['showListMenu']) {
-            $managements["manageMailingLists"] = [
-                'tabname' => "Manage Mailing Lists",
-                'attID' => 'manageMailingLists',
-                'attFaCls' => 'fa-envelope',
-            ];
-        }
-        if($getDomainSettings['showDomainAliasMenu']) {
-            $managements["manageDomainAliases"] = [
-                'tabname' => "Manage Domain Licenses",
-                'attID' => 'manageDomainAliases',
-                'attFaCls' => 'fa-envelope',
-            ];
-        }
-
+        if(is_array($getDomainSettings) && !empty($getDomainSettings)) {
+            if(!empty($getDomainSettings['enableMapiEwsAccountManagement']) && $getDomainSettings['enableMapiEwsAccountManagement']) {
+                $managements["manageEwsLicenses"] = [
+                    'tabname' => "Manage EWS Licenses",
+                    'attID' => 'manageEwsLicenses',
+                    'attFaCls' => 'fa-tasks',
+                ];
+            }
+            if($getDomainSettings['enableActiveSyncAccountManagement']) {
+                $managements["manageEasLicenses"] = [
+                    'tabname' => "Manage EAS Licenses",
+                    'attID' => 'manageEasLicenses',
+                    'attFaCls' => 'fa-sitemap',
+                ];
+            }
+            if($getDomainSettings['showListMenu']) {
+                $managements["manageMailingLists"] = [
+                    'tabname' => "Manage Mailing Lists",
+                    'attID' => 'manageMailingLists',
+                    'attFaCls' => 'fa-envelope',
+                ];
+            }
+            if($getDomainSettings['showDomainAliasMenu']) {
+                $managements["manageDomainAliases"] = [
+                    'tabname' => "Manage Domain Licenses",
+                    'attID' => 'manageDomainAliases',
+                    'attFaCls' => 'fa-globe',
+                ];
+            }
+        } 
 
         // Normal Client Area Page Load
         $defaultManagements = [
@@ -690,24 +706,22 @@ function smarterwgsmail_ClientArea(array $params) {
                 'attID' => 'addAlias',
                 'attFaCls' => 'fa-plus',
             ],
-            'logInToWebmail' => [
-                'tabname' => "Log In To Webmail",
-                'attID' => 'logInToWebmail',
-                'attFaCls' => 'fa-sign-in',
-            ],
         ];
 
-        $managements = array_merge($defaultManagements, $managements);
 
-        if($_GET['test'] == 'aman') {
-            echo "<pre>"; print_r($managements); die;
-        }
+        $managements = array_merge($defaultManagements, $managements);
 
         $vars = [
             'assets_link' => $CONFIG["SystemURL"] . "/modules/servers/" . $params['model']->product->servertype . "/assets/",
             'managements' => $managements,
-            'serviceId' => $params['serviceid']
+            'serviceId' => $params['serviceid'],
+            'logInToWebmail' => $logInToWebmail,
         ];
+
+        if($_GET['test'] == 'aman') {
+            echo "<pre>"; print_r($vars); die;
+        }
+
 
         return [
             'templatefile' => 'templates/overview.tpl',
@@ -732,3 +746,241 @@ function smarterwgsmail_ClientArea(array $params) {
     }
 }
 
+
+/**
+ * Change Package (Upgrade Plan)
+*/
+function smarterwgsmail_ChangePackage($params) {
+    try {
+
+        $helper = new Helper($params);
+
+        $maxUsers = intval($params["configoption3"]);
+        $maxMailboxSize = intval($params["configoption4"]);
+        $maxDomainSize = intval($params["configoption10"]);
+        $maxAliases = intval($params["configoption5"]);
+        $maxDomainAliases = intval($params["configoption6"]);
+        $maxMailingLists = intval($params["configoption8"]);
+        $allocatedExchange = 0;
+        $allocatedEas = intval($params["configoption7"]);
+        $allocatedEasManagement = false;
+        $allocatedMapi = intval($params["configoption9"]);
+        $allocatedMapiManagement = false;
+        $domainAliasManagement = false;
+        $maxMailboxSizeManagement = false;
+        $mailingListManagement = false;
+    
+        $hostname = 'mail.'.$params["domain"]; 
+    
+        if(isset($params["configoption3"]) && $params["configoption3"] == "default")
+            $params["configoption3"] = "";
+    
+        if(isset($params["configoptions"])){
+            if(isset($params["configoptions"]["users"]) && is_numeric($params["configoptions"]["users"])){
+                if($maxUsers == -1)
+                    $maxUsers = 0;
+                $conMaxUsers = intval($params["configoptions"]["users"]);
+                if($conMaxUsers < 0)
+                    $maxUsers = abs($conMaxUsers);
+                else
+                    $maxUsers += $conMaxUsers;
+            }
+    
+            if(isset($params["configoptions"]["mailbox_size"]) && is_numeric($params["configoptions"]["mailbox_size"])){
+                if($maxMailboxSize == -1)
+                    $maxMailboxSize = 0;
+                $conMaxMailboxSize = intval($params["configoptions"]["mailbox_size"]);
+                if($conMaxMailboxSize < 0)
+                    $maxMailboxSize = abs($conMaxMailboxSize);
+                else
+                    $maxMailboxSize += $conMaxMailboxSize;
+            }
+    
+            if(isset($params["configoptions"]["domain_size"]) && is_numeric($params["configoptions"]["domain_size"])){
+                if($maxDomainSize == -1)
+                    $maxDomainSize = 0;
+                $conDomainSize = intval($params["configoptions"]["domain_size"]);
+                if($conDomainSize < 0)
+                    $maxDomainSize = abs($conDomainSize);
+                else 
+                    $maxDomainSize += $conDomainSize;
+            }
+    
+            if(isset($params["configoptions"]["aliases"]) && is_numeric($params["configoptions"]["aliases"])){
+                if($maxAliases == -1)
+                    $maxAliases = 0;
+                $conMaxAliases = intval($params["configoptions"]["aliases"]);
+                if($conMaxAliases < 0)
+                    $maxAliases = abs($conMaxAliases);
+                else
+                    $maxAliases += $conMaxAliases;
+            }
+    
+            if(isset($params["configoptions"]["domain_aliases"]) && is_numeric($params["configoptions"]["domain_aliases"])){
+                if($maxDomainAliases == -1)
+                    $maxDomainAliases = 0;
+                $conMaxDomainAliases = intval($params["configoptions"]["domain_aliases"]);
+                if($conMaxDomainAliases < 0)
+                    $maxDomainAliases = abs($conMaxDomainAliases);
+                else
+                    $maxDomainAliases += $conMaxDomainAliases;
+            }
+    
+            if(isset($params["configoptions"]["accounts_eas"]) && is_numeric($params["configoptions"]["accounts_eas"])){
+    
+                if($allocatedEas == -1)
+                    $allocatedEas = 0;
+                $conMaxAllocatedEas = intval($params["configoptions"]["accounts_eas"]);
+                if($conMaxAllocatedEas < 0)
+                    $allocatedEas = abs($conMaxAllocatedEas);
+                else
+                    $allocatedEas += $conMaxAllocatedEas;
+            }
+    
+            if(isset($params["configoptions"]["accounts_mapiews"]) && is_numeric($params["configoptions"]["accounts_mapiews"])){
+                if($allocatedMapi == -1)
+                    $allocatedMapi = 0;
+                $conMaxAllocatedMapi = intval($params["configoptions"]["accounts_mapiews"]);
+                if($conMaxAllocatedMapi < 0)
+                    $allocatedMapi = abs($conMaxAllocatedMapi);
+                else
+                    $allocatedMapi += $conMaxAllocatedMapi;
+            }
+    
+            if(isset($params["configoptions"]["accounts_exchange"]) && is_numeric($params["configoptions"]["accounts_exchange"])){
+                if($allocatedExchange == -1)
+                    $allocatedExchange = 0;
+                if($allocatedEas == -1)
+                    $allocatedEas = 0;
+                if($allocatedMapi == -1)
+                    $allocatedMapi = 0;
+                $exch = intval($params["configoptions"]["accounts_exchange"]);
+                if($exch < 0)
+                    $allocatedExchange = abs($exch);
+                else 
+                    $allocatedExchange += $exch;
+            }
+    
+        }
+    
+        if(isset($params["customfields"])){
+            if(isset($params["customfields"]["sm_hostname"]) && strlen($params["customfields"]["sm_hostname"]) > 0){
+                $hostname = $params["customfields"]["sm_hostname"];
+            }
+            if(isset($params["customfields"]["sm_username"]) && strlen($params["customfields"]["sm_username"]) > 0){
+                $adminUsername = $params["customfields"]["sm_username"];
+            }
+            if(isset($params["customfields"]["sm_password"]) && strlen($params["customfields"]["sm_password"]) > 0){
+                $adminPassword = $params["customfields"]["sm_password"];
+            }
+        }
+    
+        if($maxUsers < 1)
+            return "Error: User count must be greater than 0.";
+    
+    
+        $allocatedEas = $allocatedEas + $allocatedExchange;
+        $allocatedMapi = $allocatedMapi + $allocatedExchange;
+    
+    
+        if($allocatedEas > -1)
+            $allocatedEasManagement = true;
+        if($allocatedMapi > -1)
+            $allocatedMapiManagement = true;
+        if($maxDomainAliases > -1)
+            $domainAliasManagement = true;
+        if($maxMailboxSize == 0 && $maxDomainSize > 0)
+            $maxMailboxSizeManagement = true;
+        if($maxMailingLists > -1)
+            $mailingListManagement = true;
+    
+        //Normalize values, this is after logic!
+        $allocatedEas = max(0, $allocatedEas);
+        $allocatedMapi = max(0, $allocatedMapi);
+        $maxDomainAliases = max(0, $maxDomainAliases);
+        $maxMailboxSize = max(0, $maxMailboxSize); //
+        $maxDomainSize = max(0, $maxDomainSize); //
+        $maxAliases = max(0, $maxAliases);
+        $maxMailingLists = max(0, $maxMailingLists);
+    
+    
+        // Domain settings
+        $inputData2 = array(
+            'domainSettings' => array(
+                'hostname' => $hostname, //
+                'mainDomainAdmin' => $params["username"], //
+                'outgoingIP'=> $params["configoption2"], //
+                'maxAliases' => $maxAliases, //
+                'maxUsers' => $maxUsers, //
+                'maxSize' => $maxDomainSize*1024 * 1024, //
+                'maxLists' => $maxMailingLists, //
+    
+                'activeDirectoryIntegration' => (($params["configoption11"] == "on") ? true : false),
+                'customLoginDisplay' => (($params["configoption12"] == "on") ? true : false),
+                'enableMailForwarding'=> (($params["configoption13"] == "on") ? true : false),
+                'enableSmtpAccounts'=> (($params["configoption14"] == "on") ? true : false),
+                'enableXmpp'=> (($params["configoption15"] == "on") ? true : false),
+                'enableDisposableAddresses' => (($params["configoption16"] == "on") ? true : false),
+                'enableFileStorage' => (($params["configoption17"] == "on") ? true : false),
+                'sharedGlobalAddressList' => (($params["configoption18"] == "on") ? true : false),
+                'webConferencing' => (($params["configoption19"] == "on") ? true : false),
+                'twoFactorSettings' => array(
+                    'setting' => (($params["configoption20"] == "on") ? "1" : "0"),
+                ),
+                'maxActiveSyncAccounts' => $allocatedEas,
+                'maxMapiEwsAccounts' => $allocatedMapi,
+                'maxDomainAliases' => $maxDomainAliases,
+                'enableActiveSyncAccountManagement' => ($allocatedEasManagement ? true : false),
+                'enableMapiEwsAccountManagement' => ($allocatedMapiManagement ? true : false),
+                'allowUserSizeChanging' => ($maxMailboxSizeManagement ? true : false),
+                'showDomainAliasMenu' => ($domainAliasManagement ? true : false),
+                'showListMenu' => ($mailingListManagement ? true : false)
+            )
+        );
+    
+        $domainSettings_res = $helper->sysadmin_domainSettings($inputData2);
+        if($domainSettings_res['httpcode'] != 200 && ($domainSettings_res['result']['success'] != 1 || $domainSettings_res['result']['success'] != true)) {
+            
+            logActivity("Removing domain, failed to apply settings correctly", 0);
+
+            if(isset($domainSettings_res['result']['message']) && $domainSettings_res['result']['message'] != "") {
+                return $domainSettings_res['result']['message'];
+            } else {
+                return "An error has occurred.";
+            }
+        }
+    
+        //User defaults
+        $inputData3 = [
+            'maxMailboxSize' => $maxMailboxSize*1024 * 1024,
+            'services' => new stdClass()
+        ];
+        
+        // Post4
+        $userDefaults_res = $helper->domain_userDefault($inputData3);
+
+        if($userDefaults_res['code'] != 200 && ($userDefaults_res['result']['success'] != 1 || $userDefaults_res['result']['success'] != true)) {
+
+        } else {
+
+            // Propagate Settings
+            $inputData4 = [
+                'globalUpdate' => [
+                    ['userField' => 'MailboxSize', 'longValue' => $maxMailboxSize*1024 * 1024],
+                ],
+                'emails' => ["*@".$params["domain"]]
+            ];
+
+            // Post5
+            $propagateSettings_res = $helper->domain_propagateSettings($inputData4);
+        }
+
+
+        return 'success';
+
+    } catch(Exception $e) {
+        logActivity("Error to upgrade the plan for SmarterWgsMail, service #".$params['serviceid'].". Error: ".$e->getMessage());
+    }
+
+
+}

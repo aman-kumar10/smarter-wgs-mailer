@@ -43,7 +43,7 @@ class Helper {
             'password' => $this->serverpassword
         ];
 
-        $response = $curl->curlCall($endpoint, $data, "POST", "manage-domain");
+        $response = $curl->curlCall($endpoint, $data, "POST", "tokenDA");
 
         if($response['httpcode'] == 200 && $response['result']['success'] == true) {
             return $response['result']['impersonateAccessToken'];
@@ -347,19 +347,6 @@ class Helper {
         }
     }
 
-    /**
-     * Label Formatting
-    */
-    public function labelFormat($string) {
-        $string = str_replace('_', ' ', $string);
-
-        // Add space before camelCase
-        $string = preg_replace('/([a-z])([A-Z])/', '$1 $2', $string);
-
-        // Capitalize each word
-        return ucwords($string);
-    }
-
     // Account list search (Users & Aliases)
     public function accountsListSearch($for){
         try {
@@ -522,13 +509,51 @@ class Helper {
             $response = $curl->curlCall($endPoint, $data, 'POST', 'retrieve-login-token');
 
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
-                return  $response['result']['autoLoginUrl'];
+                return  [
+                    'url' => $response['result']['autoLoginUrl']
+                ];
             } else {
-                return $response['result']['message'];
+                return  [
+                    'message' => $response['result']['message']
+                ];
             }
 
         } catch(Exception $e) {
             logActivity("Error in retrieve-login-token, Error: ".$e->getMessage());
         }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Label Formatting
+    public function labelFormat($string) {
+        $string = str_replace('_', ' ', $string);
+
+        $string = preg_replace('/([a-z])([A-Z])/', '$1 $2', $string);
+
+        return ucwords($string);
+    }
+
+    // Storage Size formatting
+    function formatSize($bytes) {
+        if (!is_numeric($bytes)) {
+            return $bytes;
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+        $factor = floor((strlen($bytes) - 1) / 3);
+        return sprintf("%.2f %s", $bytes / pow(1024, $factor), $units[$factor]);
     }
 }

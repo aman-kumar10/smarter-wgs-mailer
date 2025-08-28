@@ -8,8 +8,16 @@ $(document).ready(function () {
         let tabId = tabEl.attr("href");
         let serviceId = $("#custom-tabs-container").data("serviceid");
 
+        if (tabEl.attr("id") === "logInToWebmail") {
+            if (tabId) {
+                window.open(tabId, "_blank");
+            }
+            return;
+        }
+
         $("#custom-loader").show();
         $("#custom-tab-response").hide();
+        $(".custom-nav-tabs, .custom-sub-nav").addClass("tabs-disabled"); // disable tabs
 
         $.ajax({
             url: '../modules/servers/smarterwgsmail/lib/headTabs/ajax.php',
@@ -24,13 +32,10 @@ $(document).ready(function () {
 
                 if (tabId === "managementsTab") {
                     $(".custom-management-tabs").show();
-
-                    // auto-load first sub-tab
                     let firstSubTab = $(".custom-sub-link").first();
                     if (firstSubTab.length) {
-                        loadSubTab(firstSubTab); // call sub loader directly
+                        loadSubTab(firstSubTab);
                     }
-
                 } else {
                     $(".custom-management-tabs").hide();
                     $("#custom-tab-response").html(response).show();
@@ -39,11 +44,14 @@ $(document).ready(function () {
             error: function () {
                 $("#custom-loader").hide();
                 $("#custom-tab-response").html("<p class='text-danger'>Error loading tab.</p>").show();
+            },
+            complete: function () {
+                $(".custom-nav-tabs, .custom-sub-nav").removeClass("tabs-disabled");
             }
         });
     }
 
-    // Load Management Tabs Data
+    // Load Sub Tabs
     function loadSubTab(tabEl) {
         $(".custom-sub-link").removeClass("active");
         tabEl.addClass("active");
@@ -51,9 +59,9 @@ $(document).ready(function () {
         let subTabId = tabEl.attr("href");
         let serviceId = $("#custom-tabs-container").data("serviceid");
 
-
         $("#custom-sub-loader").show();
         $("#custom-sub-response").hide();
+        $(".custom-nav-tabs, .custom-sub-nav").addClass("tabs-disabled");
 
         $.ajax({
             url: '../modules/servers/smarterwgsmail/lib/managementTabs/ajax.php',
@@ -70,6 +78,9 @@ $(document).ready(function () {
             error: function () {
                 $("#custom-sub-loader").hide();
                 $("#custom-sub-response").html("<p class='text-danger'>Error loading sub-tab.</p>").show();
+            },
+            complete: function () {
+                $(".custom-nav-tabs, .custom-sub-nav").removeClass("tabs-disabled");
             }
         });
     }

@@ -44,19 +44,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             if (!empty($domainData)) {
                 $formattedData = [];
                 foreach ($domainData as $label => $value) {
+                    if (is_array($value) || is_object($value) || (is_null($value) || trim((string) $value) === '')) {
+                        continue;
+                    }
                     $formattedData[$helper->labelFormat($label)] = $value;
                 }
 
                 $html = '';
                 foreach ($formattedData as $label => $value) {
-                    $displayValue = (is_null($value) || trim((string) $value) === '') ? '-' : $value;
+                    if (is_null($value) || trim((string) $value) === '') {
+                        continue;
+                    }
+
+                    if ($value === true) {
+                        $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
+                    } elseif ($value === false) {
+                        $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
+                    } else {
+                        $displayValue = htmlspecialchars((string) $value);
+                    }
                     $html .= '
                         <div class="row mb-2">
                             <div class="col-sm-5 text-left">
                                 <strong>' . htmlspecialchars($label) . '</strong>
                             </div>
                             <div class="col-sm-7 text-left">
-                                ' . htmlspecialchars((string) $displayValue) . '
+                                ' . $displayValue . '
                             </div>
                         </div>
                     ';
@@ -80,19 +93,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             if (!empty($domainLicense)) {
                 $formattedData = [];
                 foreach ($domainLicense as $label => $value) {
+                    if (is_array($value) || is_object($value) || (is_null($value) || trim((string) $value) === '')) {
+                        continue;
+                    }
                     $formattedData[$helper->labelFormat($label)] = $value;
                 }
 
                 $html = '';
                 foreach ($formattedData as $label => $value) {
-                    $displayValue = (is_null($value) || trim((string) $value) === '') ? '-' : $value;
+                    if (is_null($value) || trim((string) $value) === '') {
+                        continue;
+                    }
+
+                    if ($value === true) {
+                        $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
+                    } elseif ($value === false) {
+                        $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
+                    } else {
+                        $displayValue = htmlspecialchars((string) $value);
+                    }
                     $html .= '
                         <div class="row mb-2">
                             <div class="col-sm-5 text-left">
                                 <strong>' . htmlspecialchars($label) . '</strong>
                             </div>
                             <div class="col-sm-7 text-left">
-                                ' . htmlspecialchars((string) $displayValue) . '
+                                ' . $displayValue . '
                             </div>
                         </div>
                     ';
@@ -116,24 +142,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
         if (is_array($domainSettings)) {
             if (!empty($domainSettings)) {
                 $formattedData = [];
+
                 foreach ($domainSettings as $label => $value) {
+                    if (is_array($value) || is_object($value) || (is_null($value) || trim((string) $value) === '')) {
+                        continue;
+                    }
+
                     $formattedData[$helper->labelFormat($label)] = $value;
                 }
 
-                $html = '';
-                foreach ($formattedData as $label => $value) {
-                    $displayValue = (is_null($value) || trim((string) $value) === '') ? '-' : $value;
-                    $html .= '
-                        <div class="row mb-2">
-                            <div class="col-sm-5 text-left">
-                                <strong>' . htmlspecialchars($label) . '</strong>
+                if (!empty($formattedData)) {
+                    $html = '';
+                    foreach ($formattedData as $label => $value) {
+                        if (is_null($value) || trim((string) $value) === '') {
+                            continue;
+                        }
+                        if ($value === true) {
+                            $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
+                        } elseif ($value === false) {
+                            $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
+                        } elseif (is_numeric($value) && $label && stripos($label, 'size') !== false) {
+                            $displayValue = $helper->formatSize((float) $value);
+                        } else {
+                            $displayValue = htmlspecialchars((string) $value);
+                        }
+                        
+                        $html .= '
+                            <div class="row mb-2">
+                                <div class="col-sm-5 text-left">
+                                    <strong>' . htmlspecialchars($label) . '</strong>
+                                </div>
+                                <div class="col-sm-7 text-left">
+                                    ' . $displayValue . '
+                                </div>
                             </div>
-                            <div class="col-sm-7 text-left">
-                                ' . htmlspecialchars((string) $displayValue) . '
-                            </div>
-                        </div>
-                    ';
+                        ';
+                    }
+                } else {
+                    $html = '<div class="alert alert-warning">No displayable data found</div>';
                 }
+
             } else {
                 $html = '<div class="alert alert-warning">No data found</div>';
             }
@@ -142,7 +190,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
         } else {
             $html = '<div class="alert alert-warning">No data found</div>';
         }
-
 
     }
 
