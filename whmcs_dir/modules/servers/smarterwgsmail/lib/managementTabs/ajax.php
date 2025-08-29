@@ -35,61 +35,231 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
 
     $helper = new Helper($params);
 
+    $userData   = $helper->accountsListSearch('users');
 
     // Get Users
-    if($tab == 'userAccount') {
+    if ($tab == 'userAccount') {
+
         $userData = $helper->accountsListSearch('users');
-    }
 
-    // Get Aliases
-    if($tab == 'userAliases') {
-        $userData = $helper->accountsListSearch('aliases');
-    }
+        if (!empty($userData['responseData']) && is_array($userData['responseData'])) {
+            $html .= '<h3 style="margin-top:15px;">Users</h3>';
 
-    // --- Display Users & Alias data in ---
-    if (is_array($userData['responseData'][0])) {
-        if (!empty($userData['responseData'][0])) {
-            $formattedData = [];
-            foreach ($userData['responseData'][0] as $label => $value) {
-                if (is_array($value) || is_object($value) || (is_null($value) || trim((string) $value) === '')) {
-                    continue;
-                }
-                $formattedData[$helper->labelFormat($label)] = $value;
-            }
+            foreach ($userData['responseData'] as $index => $user) {
+                if (!is_array($user)) continue;
 
-            $html = '';
-            foreach ($formattedData as $label => $value) {
-                if (is_null($value) || trim((string) $value) === '') {
-                    continue;
-                }
+                $userHeading = !empty($user['displayName']) ? $user['displayName'] : 'Unnamed User';
 
-                if ($value === true) {
-                    $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
-                } elseif ($value === false) {
-                    $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
-                } else {
-                    $displayValue = htmlspecialchars((string) $value);
+                // Get user-specific data for editing
+                $domainUserGet = $helper->getdomainUserData(['userName' => $user['userName']]);
+
+                $formattedData = [];
+                foreach ($user as $label => $value) {
+                    if (is_array($value) || is_object($value)) continue;
+                    $formattedData[$helper->labelFormat($label)] = $value;
                 }
 
                 $html .= '
-                    <div class="row mb-2">
-                        <div class="col-sm-5 text-left">
-                            <strong>' . htmlspecialchars($label) . '</strong>
-                        </div>
-                        <div class="col-sm-7 text-left">
-                            ' . $displayValue . '
+                <div class="card mb-3 user-card" style="border:1px solid #ddd; border-radius:6px;">
+                    <div class="card-header" style="background:#f8f9fa; font-weight:bold;">
+                        ' . htmlspecialchars($userHeading) . '
+                        <div style="float:right;">
+                            <button class="btn custom-btn view-user" data-target="userPopup' . $index . '">View</button>
+                            <button class="btn custom-btn edit-user" style="background: green !important;" data-target="userEditPopup' . $index . '">Edit</button>
+                            <button class="btn custom-btn delete-user" style="background: red !important;" data-target="deletePopup' . $index . '">Delete</button>
                         </div>
                     </div>
-                ';
+                </div>
+
+                <!--  View Popup  -->
+                <div id="userPopup' . $index . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <div class="custom-popup-header">
+                            ' . htmlspecialchars($userHeading) . ' - Details
+                            <span class="close-popup">&times;</span>
+                        </div>
+                        <div class="custom-popup-body">';
+
+                foreach ($formattedData as $label => $value) {
+                    if (is_null($value) || trim((string) $value) === '') continue;
+
+                    if ($value === true) {
+                        $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
+                    } elseif ($value === false) {
+                        $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
+                    } else {
+                        $displayValue = htmlspecialchars((string) $value);
+                    }
+
+                    $html .= '
+                            <div class="row mb-2">
+                                <div class="col-sm-5 text-left"><strong>' . htmlspecialchars($label) . '</strong></div>
+                                <div class="col-sm-7 text-left">' . $displayValue . '</div>
+                            </div>';
+                }
+
+                $html .= '
+                        </div>
+                    </div>
+                </div>
+
+                <!--  Edit Popup  -->
+                <div id="userEditPopup' . $index . '" class="custom-popup">
+                    <div class="custom-popup-content"  style="text-align: left;">
+                        <div class="custom-popup-header"  style="text-align: center !important; font-size: 17px; font-weight: 600;">
+                            Edit User - ' . htmlspecialchars($userHeading) . '
+                            <span class="close-popup">&times;</span>
+                        </div>
+                        <div class="custom-popup-body">
+                            <form method="post" action="">
+                                <div class="form-group">
+                                    <label for="username' . $index . '">Username</label>
+                                    <input class="form-control" type="text" id="username' . $index . '" 
+                                        name="username" 
+                                        value="' . htmlspecialchars($domainUserGet['userName']) . '">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="displayname' . $index . '">Display Name</label>
+                                    <input class="form-control" type="text" id="displayname' . $index . '" 
+                                        name="displayname" 
+                                        value="' . htmlspecialchars($domainUserGet['fullName']) . '">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="password' . $index . '">New Password</label>
+                                    <input class="form-control" type="password" id="password' . $index . '" name="password">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="mailboxsize' . $index . '">Mailbox Size (MB)</label>
+                                    <input class="form-control" type="number" id="mailboxsize' . $index . '" 
+                                        name="mailboxsize" min="0" 
+                                        value="' . htmlspecialchars($domainUserGet['maxMailboxSize'] / 1024 / 1024) . '" 
+                                        style="width: 150px">
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="domainadmin' . $index . '" 
+                                        name="domainadmin" ' . (!empty($domainUserGet['securityFlags']['isDomainAdmin']) ? 'checked' : '') . '>
+                                    <label class="form-check-label" for="domainadmin' . $index . '">
+                                        Domain Administrator
+                                    </label>
+                                </div>
+
+                                <input type="hidden" name="selectuser" value="' . htmlspecialchars($domainUserGet['userName']) . '">
+                                <input type="hidden" name="id" value="' . (int)$id . '">
+                                <input type="hidden" name="modop" value="custom">
+                                <input type="hidden" name="formAction" value="savechangessmartermailuser">
+
+                                <div class="mt-3">
+                                    <input class="btn btn-primary edit-domain-user" type="submit"  style="right: unset; margin-bottom: 34px;" value="Save Changes">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- *********************** Delete Popup *********************** -->
+                <div id="deletePopup' . $index . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <span class="close-popup">&times;</span>
+                        <h1 style="margin: 0;"><i class="fas fa-times-circle fa-fw" style="color: red;"></i></h1>
+                        <p>Are you sure you want to delete <strong>' . htmlspecialchars($user['userName']) . '</strong>?</p>
+                        <button class="btn custom-btn confirm-delete" 
+                                data-username="' . htmlspecialchars($user['userName']) . '" 
+                                data-type="user">Yes, Delete</button>
+                    </div>
+                </div>';
             }
         } else {
-            $html = '<div class="alert alert-warning">No data found</div>';
+            $html .= '<div class="alert alert-warning">No users found</div>';
         }
-    } elseif (is_string($userData['responseData']) && !empty($userData['responseData'])) {
-        $html = '<div class="alert alert-info">' . htmlspecialchars($userData['responseData']) . '</div>';
-    } else {
-        $html = '<div class="alert alert-warning">No data found</div>';
     }
+
+
+    // Get Aliases
+    if ($tab == 'userAliases') {
+        $aliasData  = $helper->accountsListSearch('aliases');
+
+        if (!empty($aliasData['responseData']) && is_array($aliasData['responseData'])) {
+            $html .= '<h3 style="margin-top:30px;">Aliases</h3>';
+    
+            foreach ($aliasData['responseData'] as $aIndex => $alias) {
+                if (!is_array($alias)) continue;
+    
+                $aliasHeading = !empty($alias['displayName']) ? $alias['displayName'] : 'Unnamed Alias';
+    
+                $formattedData = [];
+                foreach ($alias as $label => $value) {
+                    if (is_array($value) || is_object($value)) continue;
+                    $formattedData[$helper->labelFormat($label)] = $value;
+                }
+    
+                $html .= '
+                <div class="card mb-3 alias-card" style="border:1px solid #ddd; border-radius:6px;">
+                    <div class="card-header" style="background:#f8f9fa; font-weight:bold;">
+                        ' . htmlspecialchars($aliasHeading) . '
+                        <div style="float:right;">
+                            <button class="btn custom-btn view-alias" style="background: #007bff !important;" data-target="aliasPopup' . $aIndex . '">View</button>
+                            <button class="btn custom-btn edit-alias" style="background: green !important;" data-target="aliasEditPopup' . $aIndex . '">Edit</button>
+                            <button class="btn custom-btn delete-alias" style="background: red !important;" data-target="aliasDeletePopup' . $aIndex . '">Delete</button>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- view popup -->
+                <div id="aliasPopup' . $aIndex . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <div class="custom-popup-header">
+                            ' . htmlspecialchars($aliasHeading) . ' - Details
+                            <span class="close-popup">&times;</span>
+                        </div>
+                        <div class="custom-popup-body">';
+    
+                foreach ($formattedData as $label => $value) {
+                    if (is_null($value) || trim((string) $value) === '') {
+                        continue;
+                    }
+
+                    if ($value === true) {
+                        $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
+                    } elseif ($value === false) {
+                        $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
+                    } else {
+                        $displayValue = htmlspecialchars((string) $value);
+                    }
+    
+                    $html .= '
+                            <div class="row mb-2">
+                                <div class="col-sm-5 text-left"><strong>' . htmlspecialchars($label) . '</strong></div>
+                                <div class="col-sm-7 text-left">' . $displayValue . '</div>
+                            </div>';
+                }
+    
+                $html .= '
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- delete confirm popup -->
+                <div id="aliasDeletePopup' . $aIndex . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <span class="close-popup">&times;</span>
+                        <h1 style="margin: 0;"><i class="fas fa-times-circle fa-fw" style="color: red;"></i></h1>
+                        <p>Are you sure you want to delete <strong>' . htmlspecialchars($alias['aliasEmail']) . '</strong>?</p>
+                        <button class="btn custom-btn confirm-delete" 
+                                data-username="' . htmlspecialchars($alias['aliasEmail']) . '" 
+                                data-type="alias">Yes, Delete</button>
+                    </div>
+                </div>';
+            }
+        } else {
+            $html .= '<div class="alert alert-warning">No aliases found</div>';
+        }
+    }
+
+
 
 
     // Add User Form

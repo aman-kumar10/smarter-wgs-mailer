@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             $inputData['userMailSettings'] = array('maxSize' => $whmcs->get_req_var('mailboxsize') * 1024 * 1024);
         }
 
-        $userData = $helper->domainUserPut($inputData);
+        $userData = $helper->domainUserPut($inputData, 'add');
 
         if (!empty($userData['status']) && $userData['status'] === 'success') {
             $html = '<div class="alert alert-success">User created successfully</div>';
@@ -105,6 +105,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             $html = '<div class="alert alert-danger">' . htmlspecialchars($msg) . '</div>';
         }
     }
+
+
+    // Handle edit User
+    if ($formAction === 'savechangessmartermailuser') {
+
+        $inputData = [
+            'email' => $whmcs->get_req_var('selectuser'),
+            'userData' => [
+                'fullName' => $whmcs->get_req_var('displayname'),
+                'maxMailboxSize' => $whmcs->get_req_var('mailboxsize') * 1024 * 1024,
+                'securityFlags' => [
+                    'isDomainAdmin' => (($whmcs->get_req_var('domaincheckbox') == "on") ? true : false),
+                    'authType' => (($whmcs->get_req_var('authtype') == "1") ? 1 : 0)
+                ]
+            ],
+        ];
+
+        if($whmcs->get_req_var('authtype') == "1"){
+            $inputData['userData']['securityFlags']['authenticatingWindowsDomain'] = $whmcs->get_req_var('addomain');
+            $inputData['userData']['adUsername'] = $whmcs->get_req_var('adusername');
+        } else {
+            $inputData['userData']['password'] = $whmcs->get_req_var('password') == "" ? null : $whmcs->get_req_var('password');
+            $inputData['userData']['isPasswordExpired'] = ($whmcs->get_req_var('resetonlogincheckbox') == "on") ? true : false;
+        }
+
+        if($domainData['settings']['allowUserSizeChanging']) {
+            $inputData['userMailSettings'] = array('maxSize' => $whmcs->get_req_var('mailboxsize') * 1024 * 1024);
+        }
+
+        $userData = $helper->domainUserPut($inputData, 'edit');
+
+        if (!empty($userData['status']) && $userData['status'] === 'success') {
+            $html = '<div class="alert alert-success">User updated successfully</div>';
+        } else {
+            if(!empty(trim($userData['response']))) {
+                if(strpos($userData['response'], 'LIMIT_EXCEEDED')) {
+                    $html = '<div class="alert alert-danger">' . htmlspecialchars($userData['response']) . '</div>';
+                }
+            } else {
+                $html = '<div class="alert alert-danger">User updation failed</div>';
+            }
+        }
+    }
+
+
+
+    // User or alise delete
+    if ($formAction === 'domainUserDelete' || $formAction === 'domainAliasDelete') {
+        $getUser = [
+            'email' => $whmcs->get_req_var('userName'). '@' . $params['domain']
+        ];
+
+        $domainUserGet = $helper->getdomainUserData($getUser);
+        if (($domainUserGet['status']) && $domainUserGet['status'] === 'success') {
+            $html = '<div class="alert alert-warning">
+                This is the Primary Domain Administrator account and can not be deleted.
+                <p style="text-align: center; color: #664d03;">NOTE: Deleting a user will remove all data and can not be reversed.</p>
+            </div>';
+        } 
+
+        $inputData = [
+            'input' => [$whmcs->get_req_var('userName')]
+        ];
+
+
+        $domainUserDelete = $helper->domainUserAliasDelete($inputData);
+        
+        if (!empty($domainUserDelete['status']) && $domainUserDelete['status'] === 'success') {
+            $html = '<div class="alert alert-success">User deleted successfully</div>';
+        } else {
+            $html = '<div class="alert alert-danger">' . htmlspecialchars($domainUserDelete['message']) . '</div>';
+        }
+    }
+
 
 
     header('Content-Type: text/html; charset=UTF-8');

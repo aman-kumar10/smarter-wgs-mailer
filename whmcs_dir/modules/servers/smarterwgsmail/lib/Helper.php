@@ -402,12 +402,17 @@ class Helper {
 
 
     // domain User put
-    public function domainUserPut($data){
+    public function domainUserPut($data, $action){
         try {
             $curl = new Curl($this->params);
 
             $tokenDA = $this->apiLoginDAtoken($this->params);
-            $endPoint = '/api/v1/settings/domain/user-put/';
+            if($action == 'add') {
+                $endPoint = '/api/v1/settings/domain/user-put/';
+            }
+            if($action == 'edit') {
+                $endPoint = '/api/v1/settings/domain/post-user/';
+            }
             $response = $curl->curlCall($endPoint, $data, 'POST', "domain-user-put", $tokenDA);
 
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
@@ -474,7 +479,7 @@ class Helper {
         }
     }
 
-    // get mailing list
+    // get domain aliases
     public function getdomainAliases() {
         try {
 
@@ -523,6 +528,55 @@ class Helper {
         }
     }
 
+    // domian user delete
+    public function domainUserAliasDelete($data) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+
+            $endPoint = '/api/v1/settings/domain/account-list-delete';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'account-list-delete', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  [
+                    'status' => 'success',
+                    'message' => $response['result']['message']
+                ];
+            } else {
+                return  [
+                    'status' => 'error',
+                    'message' => !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'Error to delete the user'
+                ];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in account-list-delete, Error: ".$e->getMessage());
+        }
+    }
+
+
+    // get domain user data
+    public function getdomainUserData($data) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/get-user';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'get-user', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result']['userData'];
+            } else {
+                return $response['result']['message'];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in get-user, Error: ".$e->getMessage());
+        }
+    }
 
 
 

@@ -677,7 +677,7 @@ function smarterwgsmail_ClientArea(array $params) {
             }
             if($getDomainSettings['showDomainAliasMenu']) {
                 $managements["manageDomainAliases"] = [
-                    'tabname' => "Manage Domain Licenses",
+                    'tabname' => "Manage Domain Aliases",
                     'attID' => 'manageDomainAliases',
                     'attFaCls' => 'fa-globe',
                 ];
