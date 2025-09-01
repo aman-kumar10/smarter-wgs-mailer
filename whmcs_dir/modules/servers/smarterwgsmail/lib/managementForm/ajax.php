@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             ]
         ];
 
-        $userData = $helper->domainAliasPut($inputData);
+        $userData = $helper->domainAliasPut($inputData, 'add');
 
         if (!empty($userData['status']) && $userData['status'] === 'success') {
             $html = '<div class="alert alert-success">User Alias added successfully</div>';
@@ -149,6 +149,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
         }
     }
 
+    // Handle edit alias
+    if ($formAction === 'savechangessmartermailalias') {
+
+        $inputData = [
+            'oldName' => $whmcs->get_req_var('selectuser'),
+            'alias' => [
+                'name' => $whmcs->get_req_var('aliasname'),
+                'displayName' => $whmcs->get_req_var('displayname'),
+                'allowSending' => (($whmcs->get_req_var('allowsending') == "on") ? true : false),
+                'hideFromGAL' => !(($whmcs->get_req_var('showingal') == "on") ? true : false),
+                'internalOnly' => (($whmcs->get_req_var('internalonly') == "on") ? true : false),
+                'aliasTargetList' => explode("\r\n", $whmcs->get_req_var('aliasemailaddress'))
+            ],
+        ];
+
+        $response = $helper->domainAliasPut($inputData, 'edit');
+
+        if (!empty($response['status']) && $response['status'] === 'success') {
+            $html = '<div class="alert alert-success">Alias updated successfully</div>';
+        } else {
+            if(!empty(trim($response['response']))) {
+                if(strpos($response['response'], 'LIMIT_EXCEEDED')) {
+                    $html = '<div class="alert alert-danger">' . htmlspecialchars($response['response']) . '</div>';
+                }
+            } else {
+                $html = '<div class="alert alert-danger">Alias updation failed</div>';
+            }
+        }
+    }
 
 
     // User or alise delete
@@ -157,13 +186,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             'email' => $whmcs->get_req_var('userName'). '@' . $params['domain']
         ];
 
-        $domainUserGet = $helper->getdomainUserData($getUser);
-        if (($domainUserGet['status']) && $domainUserGet['status'] === 'success') {
-            $html = '<div class="alert alert-warning">
-                This is the Primary Domain Administrator account and can not be deleted.
-                <p style="text-align: center; color: #664d03;">NOTE: Deleting a user will remove all data and can not be reversed.</p>
-            </div>';
-        } 
+        if($formAction === 'domainUserDelete') {
+            $domainUserGet = $helper->getdomainUserData($getUser);
+            if (($domainUserGet['status']) && $domainUserGet['status'] === 'success') {
+                $html = '<div class="alert alert-warning">
+                    This is the Primary Domain Administrator account and can not be deleted.
+                    <p style="text-align: center; color: #664d03;">NOTE: Deleting a user will remove all data and can not be reversed.</p>
+                </div>';
+            } 
+        }
 
         $inputData = [
             'input' => [$whmcs->get_req_var('userName')]

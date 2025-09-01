@@ -984,3 +984,18 @@ function smarterwgsmail_ChangePackage($params) {
 
 
 }
+
+
+function smarterwgsmail_LoginLink($params) {
+    try {
+        $helper = new Helper($params);
+        $getDomainSettings = $helper->sysadmin_getDomainSettings();
+        // Webmail Login URL
+        $loginUrl = $helper->getWebmailLoginURL(!empty($getDomainSettings['mainDomainAdmin']) ? $getDomainSettings['mainDomainAdmin'] : '');
+        if(!empty($loginUrl['url'])) {
+            echo '<a href="'.$loginUrl['url'].'" target="_blank" class="btn btn-success" style="margin: -5px 15px 5px; border: none;">Login to Webmail</a>';
+        } 
+    } catch(Exception $e) {
+        logActivity("Errror to generate the webmail login url. Error: ".$e->getMessage());
+    }
+}

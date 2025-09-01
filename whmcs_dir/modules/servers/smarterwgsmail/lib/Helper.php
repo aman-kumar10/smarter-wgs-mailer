@@ -433,12 +433,17 @@ class Helper {
     }
 
     // domain Alias put
-    public function domainAliasPut($data){
+    public function domainAliasPut($data, $action){
         try {
             $curl = new Curl($this->params);
 
             $tokenDA = $this->apiLoginDAtoken($this->params);
-            $endPoint = '/api/v1/settings/domain/alias-put/';
+            if($action == 'add') {
+                $endPoint = '/api/v1/settings/domain/alias-put/';
+            }
+            if($action == 'edit') {
+                $endPoint = '/api/v1/settings/domain/alias/';
+            }
             $response = $curl->curlCall($endPoint, $data, 'POST', "alias-put", $tokenDA);
 
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
@@ -569,6 +574,27 @@ class Helper {
 
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
                 return  $response['result']['userData'];
+            } else {
+                return $response['result']['message'];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in get-user, Error: ".$e->getMessage());
+        }
+    }
+
+    // get domain alias data
+    public function getdomainAliasData($user) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/alias/'.$user;
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'get-user', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result']['alias'];
             } else {
                 return $response['result']['message'];
             }

@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                 $userHeading = !empty($user['displayName']) ? $user['displayName'] : 'Unnamed User';
 
                 // Get user-specific data for editing
-                $domainUserGet = $helper->getdomainUserData(['userName' => $user['userName']]);
+                $domainUserGet = $helper->getdomainUserData(['email' => $user['userName']."@".$params['domain']]);
 
                 $formattedData = [];
                 foreach ($user as $label => $value) {
@@ -160,7 +160,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     </div>
                 </div>
 
-                <!-- *********************** Delete Popup *********************** -->
+
+                <!--  Delete Popup  -->
                 <div id="deletePopup' . $index . '" class="custom-popup">
                     <div class="custom-popup-content">
                         <span class="close-popup">&times;</span>
@@ -184,18 +185,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
 
         if (!empty($aliasData['responseData']) && is_array($aliasData['responseData'])) {
             $html .= '<h3 style="margin-top:30px;">Aliases</h3>';
-    
+
             foreach ($aliasData['responseData'] as $aIndex => $alias) {
                 if (!is_array($alias)) continue;
-    
+
                 $aliasHeading = !empty($alias['displayName']) ? $alias['displayName'] : 'Unnamed Alias';
-    
+
+                // Get user-specific data for editing
+                $domainAliasGet = $helper->getdomainAliasData($alias['userName']);
+
                 $formattedData = [];
                 foreach ($alias as $label => $value) {
                     if (is_array($value) || is_object($value)) continue;
                     $formattedData[$helper->labelFormat($label)] = $value;
                 }
-    
+
+                $aliasTargetList = '';
+                if (is_array($domainAliasGet['aliasTargetList'])) {
+                    foreach ($domainAliasGet['aliasTargetList'] as $text) {
+                        $aliasTargetList .= $text . "\n";
+                    }
+                } else {
+                    $aliasTargetList = $domainAliasGet['aliasTargetList'];
+                }
+
+                $allowSending = ($domainAliasGet['allowSending'] == 1) ? 'checked="checked"' : '';
+                $internalOnly = ($domainAliasGet['internalOnly'] == 1) ? 'checked="checked"' : '';
+                $hideFromGAL  = ($domainAliasGet['hideFromGAL'] == 1) ? 'checked="checked"' : '';
+
                 $html .= '
                 <div class="card mb-3 alias-card" style="border:1px solid #ddd; border-radius:6px;">
                     <div class="card-header" style="background:#f8f9fa; font-weight:bold;">
@@ -207,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                         </div>
                     </div>
                 </div>
-    
+
                 <!-- view popup -->
                 <div id="aliasPopup' . $aIndex . '" class="custom-popup">
                     <div class="custom-popup-content">
@@ -216,7 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                             <span class="close-popup">&times;</span>
                         </div>
                         <div class="custom-popup-body">';
-    
+
                 foreach ($formattedData as $label => $value) {
                     if (is_null($value) || trim((string) $value) === '') {
                         continue;
@@ -226,22 +243,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                         $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
                     } elseif ($value === false) {
                         $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
+                    } elseif (is_numeric($value) && $label && stripos($label, 'bytes') !== false) {
+                            $displayValue = $helper->formatSize((float) $value);
                     } else {
                         $displayValue = htmlspecialchars((string) $value);
                     }
-    
+
                     $html .= '
                             <div class="row mb-2">
                                 <div class="col-sm-5 text-left"><strong>' . htmlspecialchars($label) . '</strong></div>
                                 <div class="col-sm-7 text-left">' . $displayValue . '</div>
                             </div>';
                 }
-    
+
                 $html .= '
                         </div>
                     </div>
                 </div>
-    
+
+                <!-- Edit alias popup -->
+                <div id="aliasEditPopup' . $aIndex . '" class="custom-popup">
+                    <div class="custom-popup-content" style="text-align: left;">
+                        <div class="custom-popup-header" style="text-align: center !important; font-size: 17px; font-weight: 600;">
+                            Edit Alias - ' . htmlspecialchars($aliasHeading) . '
+                            <span class="close-popup">&times;</span>
+                        </div>
+                        <div class="custom-popup-body">
+                            <form method="post" action="">
+                                <div class="form-group">
+                                    <label for="aliasname">Alias Name (username)</label>
+                                    <input class="form-control" type="text" name="aliasname" style="width: 300px" value="' . htmlspecialchars($domainAliasGet['name']) . '">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="displayname">Display Name</label>
+                                    <input class="form-control" type="text" name="displayname" style="width: 300px" value="' . htmlspecialchars($domainAliasGet['displayName']) . '">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="aliasemailaddress">Alias Email Addresses</label>
+                                    <p style="font-size: 12px; float: right;">One address per line</p>
+                                    <textarea cols="36" rows="10" name="aliasemailaddress" style="overflow: auto; resize: none; width: 100%; padding: 10px;">' . htmlspecialchars($aliasTargetList) . '</textarea>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-10">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="allowsending" ' . $allowSending . '/>
+                                            <label class="form-check-label" for="allowsending">
+                                                Alias can be used as a from address in webmail
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-10">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="internalonly" ' . $internalOnly . '/>
+                                            <label class="form-check-label" for="internalonly">
+                                                Internal Only
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-10">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="showingal" ' . $hideFromGAL . '/>
+                                            <label class="form-check-label" for="showingal">
+                                                Show in Global Address List
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" name="selectuser" value="' . htmlspecialchars($domainAliasGet['name']) . '" />
+                                <input type="hidden" name="modop" value="custom" />
+                                <input type="hidden" name="formAction" value="savechangessmartermailalias" />
+                                <input class="btn btn-primary edit-domain-alias" type="submit" style="right: unset; margin-bottom: 34px;" value="Save Changes" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- delete confirm popup -->
                 <div id="aliasDeletePopup' . $aIndex . '" class="custom-popup">
                     <div class="custom-popup-content">
@@ -453,7 +539,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     <div>
                         Email Addresses
                         <p style="font-size: 12px; float: right;">One address per line</p>
-                        <textarea cols="36" rows="15" name="newaliasemailaddress" style="overflow: auto; resize: none; width: 100%"></textarea>
+                        <textarea cols="36" rows="15" name="newaliasemailaddress" style="overflow: auto; resize: none; width: 100%; padding: 10px;"></textarea>
                     </div>
 
                     <div class="form-group row">

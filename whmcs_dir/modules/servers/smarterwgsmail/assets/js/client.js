@@ -180,7 +180,10 @@ $(document).ready(function () {
                 $card.fadeOut(300, function(){ $(this).remove(); });
                 $("#custom-sub-formresponse").html(response).show();
                 $btn.closest(".custom-popup").fadeOut();
-                $btn.closest("#custom-sub-response").hide();
+                let firstSubTab = $(".custom-sub-link.active");
+                if (firstSubTab.length) {
+                    loadSubTab(firstSubTab);
+                }
             },
             error: function(xhr) {
                 let errorMsg = '<div class="alert alert-danger">Error deleting ' + type + 
@@ -194,8 +197,8 @@ $(document).ready(function () {
         });
     });
 
-    // confirm edit
-    $(document).on("click", ".edit-domain-user", function() {
+    // confirm edit 
+    $(document).on("click", ".edit-domain-user, .edit-domain-alias", function(e) {
         e.preventDefault();
 
         let serviceId = $("#custom-tabs-container").data("serviceid");
@@ -214,7 +217,12 @@ $(document).ready(function () {
             success: function (response) {
                 $("#custom-sub-formresponse").html(response).show();
                 $btn.val(originalBtnText).prop("disabled", false);
+                $btn.closest(".custom-popup").fadeOut();
                 $form[0].reset();
+                let firstSubTab = $(".custom-sub-link.active");
+                if (firstSubTab.length) {
+                    loadSubTab(firstSubTab);
+                }
             },
             error: function () {
                 $btn.val(originalBtnText).prop("disabled", false);
@@ -222,6 +230,7 @@ $(document).ready(function () {
             }
         });
     });
+    
 
 
 });
