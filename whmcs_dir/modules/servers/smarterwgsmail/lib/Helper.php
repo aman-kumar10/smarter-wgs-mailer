@@ -471,7 +471,7 @@ class Helper {
 
             $tokenDA = $this->apiLoginDAtoken($this->params);
             $endPoint = '/api/v1/settings/domain/mailing-lists/list';
-            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'domain-settings', $tokenDA);
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'mailing-lists', $tokenDA);
 
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
                 return  $response['result']['items'];
@@ -480,7 +480,7 @@ class Helper {
             }
 
         } catch(Exception $e) {
-            logActivity("Error in domain-settings, Error: ".$e->getMessage());
+            logActivity("Error in mailing-lists, Error: ".$e->getMessage());
         }
     }
 

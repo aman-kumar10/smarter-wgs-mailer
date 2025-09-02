@@ -188,9 +188,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
 
         if($formAction === 'domainUserDelete') {
             $domainUserGet = $helper->getdomainUserData($getUser);
-            if (($domainUserGet['status']) && $domainUserGet['status'] === 'success') {
-                $html = '<div class="alert alert-warning">
-                    This is the Primary Domain Administrator account and can not be deleted.
+            if (($domainUserGet['securityFlags']) && $domainUserGet['securityFlags']['isDomainAdmin']) {
+                $html = '<div class="alert alert-warning">This is the Primary Domain Administrator account and can not be deleted.
                     <p style="text-align: center; color: #664d03;">NOTE: Deleting a user will remove all data and can not be reversed.</p>
                 </div>';
             } 

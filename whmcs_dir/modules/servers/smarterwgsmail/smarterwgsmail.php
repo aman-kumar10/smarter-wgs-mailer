@@ -718,10 +718,6 @@ function smarterwgsmail_ClientArea(array $params) {
             'logInToWebmail' => $logInToWebmail,
         ];
 
-        if($_GET['test'] == 'aman') {
-            echo "<pre>"; print_r($vars); die;
-        }
-
 
         return [
             'templatefile' => 'templates/overview.tpl',

@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                                 <input type="hidden" name="formAction" value="savechangessmartermailuser">
 
                                 <div class="mt-3">
-                                    <input class="btn btn-primary edit-domain-user" type="submit"  style="right: unset; margin-bottom: 34px;" value="Save Changes">
+                                    <input class="btn btn-primary edit-domain-user" type="submit"  style="right: unset; margin-bottom: 34px; position: unset;" value="Save Changes">
                                 </div>
                             </form>
                         </div>
@@ -177,7 +177,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             $html .= '<div class="alert alert-warning">No users found</div>';
         }
     }
-
 
     // Get Aliases
     if ($tab == 'userAliases') {
@@ -322,7 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                                 <input type="hidden" name="selectuser" value="' . htmlspecialchars($domainAliasGet['name']) . '" />
                                 <input type="hidden" name="modop" value="custom" />
                                 <input type="hidden" name="formAction" value="savechangessmartermailalias" />
-                                <input class="btn btn-primary edit-domain-alias" type="submit" style="right: unset; margin-bottom: 34px;" value="Save Changes" />
+                                <input class="btn btn-primary edit-domain-alias" type="submit" style="right: unset; margin-bottom: 34px; position: unset;" value="Save Changes" />
                             </form>
                         </div>
                     </div>
@@ -344,9 +343,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             $html .= '<div class="alert alert-warning">No aliases found</div>';
         }
     }
-
-
-
 
     // Add User Form
     if ($tab == 'addUser') {
@@ -433,7 +429,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                         <input type="hidden" name="id" value="' . (int) $serviceId . '" />
                         <input type="hidden" name="modop" value="custom" />
                         <input type="hidden" name="formAction" value="createsmartermailuser" />
-                        <input id="btn-submit" style="position: relative;" class="btn btn-primary mgmt-form-btn" type="submit" value="Add User" disabled />
+                        <input id="btn-submit" style="position: unset;" class="btn btn-primary mgmt-form-btn" type="submit" value="Add User" disabled />
                     </form>
                 </div>
 
@@ -578,7 +574,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     <input type="hidden" name="id" value="' . $serviceId . '" />
                     <input type="hidden" name="modop" value="custom" />
                     <input type="hidden" name="formAction" value="createsmartermailalias" />
-                    <input class="btn btn-primary mgmt-form-btn" style="position: relative;" type="submit" value="Add Alias" />
+                    <input class="btn btn-primary mgmt-form-btn" style="position: unset;" type="submit" value="Add Alias" />
                 </form>
             </div>
         ';
@@ -723,7 +719,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
 
                         <input type="hidden" name="id" value="' . (int)$id . '" />
                         <input type="hidden" name="modop" value="custom" />
-                        <input type="hidden" name="a" value="saveeaslicensechanges"/>
+                        <input type="hidden" name="formAction" value="saveeaslicensechanges"/>
                         <input class="btn btn-primary" id="save-changes" type="submit" value="Save Changes" disabled />
 
                         <br>
@@ -808,111 +804,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
 
     // For manage Mailing Lists
     if ($tab == 'manageMailingLists') {
-
         $mailingLists = $helper->getMailingLists();
 
-        $list = [];
-        if (!empty($mailingLists['data']['items'])) {
-            foreach ($mailingLists['data']['items'] as $acc) {
-                $list[] = $acc;
-            }
-        }
+        if (!empty($mailingLists) && is_array($mailingLists)) {
+            $html .= '<h3 style="margin-top:15px;">Mailing Lists</h3>';
 
-        $vars = [
-            'mailingLists' => $list,
-        ];
+            foreach ($mailingLists as $index => $mailer) {
+                if (!is_array($mailer)) continue;
 
-        if (!empty($list)) {
-            $html = '
-            <form method="post" action="">
-                <input type="hidden" name="id" value="{$id}" />
-                <input class="btn btn-link" type="submit" value="Go Back" />
-            </form>
-            
-            <h1 style="padding: 0px 50px;"> Manage Mailing Lists </h1>
-            <div style="padding: 10px 50px;">
-                <div style="box-shadow: 2px 2px 8px #9b9b9b; border-radius: 3px;">
-                    
-                    <div class="sm-top-row">
-                        <input type="text" onkeyup="searchKeyPressed(event)" 
-                            style="margin: 5px; grid-column: 1 / 4; grid-row: 1; text-indent:27px; width: 50%;" />
-                        <div class="sm-search-icon" style="grid-column: 1 / 4; grid-row: 1;">🔍</div>
-                        
-                        <form method="post" action="" style="grid-column: 4 / 4; float: right;">
-                            <input type="hidden" name="id" value="{$id}" />
-                            <input type="hidden" name="modop" value="custom" />
-                            <input type="hidden" name="a" value="addmailinglistpage" />
-                            <input class="btn btn-primary" type="submit" value="Add Mailing List" style="float: right; margin: 5px;" />
-                        </form>
-                    </div>
+                $mailHeading = !empty($mailer['listAddress']) ? $mailer['listAddress'] : 'Unnamed Mailing List';
 
-                    <div class="sm-header-row">
-                        <div style="grid-column: 1 / 3; grid-row: 1; padding: 8px;">
-                            Username
+                // Format mailing list data
+                $formattedData = [];
+                foreach ($mailer as $label => $value) {
+                    if (is_array($value) || is_object($value)) continue;
+                    $formattedData[$helper->labelFormat($label)] = $value;
+                }
+
+                $html .= '
+                <div class="card mb-3 mailinglist-card" style="border:1px solid #ddd; border-radius:6px;">
+                    <div class="card-header" style="background:#f8f9fa; font-weight:bold;">
+                        ' . htmlspecialchars($mailHeading) . '
+                        <div style="float:right;">
+                            <button class="btn custom-btn view-mail" data-target="mailPopup' . $index . '">View</button>
                         </div>
-                        <div style="grid-column: 2 / 3; grid-row: 1; padding: 8px;">
-                            Subscriber Count
-                        </div>
-                        <div style="grid-column: 3 / 3; grid-row: 1; padding: 8px;">
-                            Actions
-                        </div>
-                    </div>
-
-                    <div class="sm-row-container">
-                        {foreach from=$mailingLists item=value}
-                            <div class="sm-grid-row" username="{$value.userName}">
-                                <div class="sm-grid-cell" style="grid-column: 1 / 3;">
-                                    {$value.listAddress}
-                                </div>
-                                <div class="sm-grid-cell" style="grid-column: 2 / 3;">
-                                    {$value.listSubscriberCount}
-                                </div>
-                                <div class="sm-grid-cell-action" style="grid-column: 3 / 3;">
-                                    <form method="post" action="" style="float:right;">
-                                        <input type="hidden" name="id" value="{$id}" />
-                                        <input type="hidden" name="modop" value="custom" />
-                                        <input type="hidden" name="a" value="removemailinglist" />
-                                        <input type="hidden" name="mlid" value="{$value.id}" />
-                                        <input type="submit" value="🗑️" class="sm-unbutton" />
-                                    </form>
-                                    <form method="post" action="" style="float:right;">
-                                        <input type="hidden" name="id" value="{$id}" />
-                                        <input type="hidden" name="modop" value="custom" />
-                                        <input type="hidden" name="a" value="editmailinglistpage" />
-                                        <input type="hidden" name="mlid" value="{$value.id}" />
-                                        <input type="submit" value="📝" class="sm-unbutton" />
-                                    </form>
-                                </div>
-                            </div>
-                        {/foreach}
                     </div>
                 </div>
-            </div>
 
-            <script type="text/javascript">
-                function searchKeyPressed(event){
-                    var inputStr = event.target.value.toLowerCase();
-                    var elems = document.getElementsByClassName("sm-grid-row");
-                    for(let i = 0; i < elems.length; i++){
-                        var elemUsername = elems[i].getAttribute("username");
-                        if(elemUsername && elemUsername.toLowerCase().indexOf(inputStr) > -1 || inputStr.length === 0){
-                            elems[i].style.display = "";
-                        } else {
-                            elems[i].style.display = "none";
-                        }
+                <!-- View Popup -->
+                <div id="mailPopup' . $index . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <div class="custom-popup-header">
+                            ' . htmlspecialchars($mailHeading) . ' - Details
+                            <span class="close-popup">&times;</span>
+                        </div>
+                        <div class="custom-popup-body">';
+
+                foreach ($formattedData as $label => $value) {
+                    if (is_null($value) || trim((string)$value) === '') continue;
+
+                    if ($value === true) {
+                        $displayValue = '<i class="fa fa-check" style="color: #02af02"></i>';
+                    } elseif ($value === false) {
+                        $displayValue = '<i class="fa fa-times" style="color: red"></i>';
+                    } else {
+                        $displayValue = htmlspecialchars((string)$value);
                     }
+
+                    $html .= '
+                            <div class="row mb-2">
+                                <div class="col-sm-5 text-left"><strong>' . htmlspecialchars($label) . '</strong></div>
+                                <div class="col-sm-7 text-left">' . $displayValue . '</div>
+                            </div>';
                 }
-            </script>
-            ';
+
+                $html .= '
+                        </div>
+                    </div>
+                </div>';
+            }
         } else {
-            $html = '<div class="alert alert-warning">No data found</div>';
+            $html .= '<div class="alert alert-warning">No mailing lists found</div>';
         }
     }
+
 
     // domain aliases
     if ($tab == 'manageDomainAliases') {
 
-        $aliases = $helper->getMailingLists();
+        $aliases = $helper->getdomainAliases();
 
         $domainAliases = [];
         if (!empty($aliases['data']['domainAliasData'])) {
@@ -921,44 +881,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             }
         }
 
-        $vars = [
-            'domainAliases' => $domainAliases, 
-        ];
-
         if (!empty($domainAliases)) {
-            $html = '
-            <div>
-                <h1 style="padding: 10px 50px;"> Manage Domain Aliases </h1>
-                <div style="padding: 10px 50px;">
-                    <table>
-                        <tr>
-                            <td>
-                                <div style="float: left;">
-                                    <form method="post" action="">
-                                        <input type="hidden" name="id" value="{$id}" />
-                                        <input type="hidden" name="modop" value="custom" />
-                                        <input type="hidden" name="a" value="adddomainaliaspage" />
-                                        <input type="submit" value="Add Domain Alias" />
-                                    </form>
-                                </div>
-                                <div style="float: left; padding-left: 15px;">
-                                    <form method="post" action="">
-                                        <input type="hidden" name="id" value="{$id}" />
-                                        <input type="hidden" name="modop" value="custom" />
-                                        <input type="hidden" name="a" value="removedomainalias" />
-                                        <select style="width: 300px;" size="1" name="selectedalias" required>
-                                            {foreach from=$domainAliases item=value}
-                                                <option value="{$value.name}">{$value.name}</option>
-                                            {/foreach}
-                                        </select>
-                                        <input type="submit" value="Remove Domain Alias" />
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>';
+            $html = '-';
         } else {
             $html = '<div class="alert alert-warning">No data found</div>';
         }

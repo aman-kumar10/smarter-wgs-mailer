@@ -137,7 +137,7 @@ $(document).ready(function () {
 
 
     // open popup (view, delete, edit, alias)
-    $(document).on("click", ".view-user, .delete-user, .view-alias, .delete-alias, .edit-user, .edit-alias", function() {
+    $(document).on("click", ".view-user, .delete-user, .view-alias, .delete-alias, .edit-user, .edit-alias, .view-mail, .edit-mail, .delete-mail", function() {
         let target = $(this).data("target");
         $("#" + target).fadeIn();
     });
