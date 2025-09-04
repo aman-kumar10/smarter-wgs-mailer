@@ -186,6 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             'email' => $whmcs->get_req_var('userName'). '@' . $params['domain']
         ];
 
+        $deleted = 'Alias';
         if($formAction === 'domainUserDelete') {
             $domainUserGet = $helper->getdomainUserData($getUser);
             if (($domainUserGet['securityFlags']) && $domainUserGet['securityFlags']['isDomainAdmin']) {
@@ -193,6 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     <p style="text-align: center; color: #664d03;">NOTE: Deleting a user will remove all data and can not be reversed.</p>
                 </div>';
             } 
+            $deleted = 'User';
         }
 
         $inputData = [
@@ -203,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
         $domainUserDelete = $helper->domainUserAliasDelete($inputData);
         
         if (!empty($domainUserDelete['status']) && $domainUserDelete['status'] === 'success') {
-            $html = '<div class="alert alert-success">User deleted successfully</div>';
+            $html = '<div class="alert alert-success">'.$deleted.' deleted successfully</div>';
         } else {
             $html = '<div class="alert alert-danger">' . htmlspecialchars($domainUserDelete['message']) . '</div>';
         }

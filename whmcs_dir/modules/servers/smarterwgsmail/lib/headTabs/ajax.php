@@ -50,7 +50,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     $formattedData[$helper->labelFormat($label)] = $value;
                 }
 
-                $html = '';
+                $html = '
+                <div class="tb-data-container">
+                    <div class="row border-elememt management-data-headings">
+                        <div class="col-sm-6 text-center" style="font-weight: 600;">
+                            Fields
+                        </div>
+                        <div class="col-sm-6 text-center"  style="font-weight: 600;">
+                            Values
+                        </div>
+                    </div>';
                 foreach ($formattedData as $label => $value) {
                     if (is_null($value) || trim((string) $value) === '') {
                         continue;
@@ -64,16 +73,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                         $displayValue = htmlspecialchars((string) $value);
                     }
                     $html .= '
-                        <div class="row mb-2">
-                            <div class="col-sm-5 text-left">
-                                <strong>' . htmlspecialchars($label) . '</strong>
+                        <div class="row border-elememt">
+                            <div class="col-sm-6 text-center">
+                                ' . htmlspecialchars($label) . '
                             </div>
-                            <div class="col-sm-7 text-left">
+                            <div class="col-sm-6 text-center">
                                 ' . $displayValue . '
                             </div>
                         </div>
                     ';
                 }
+                $html .= '</div>';
             } else {
                 $html = '<div class="alert alert-warning">No data found</div>';
             }
@@ -99,7 +109,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     $formattedData[$helper->labelFormat($label)] = $value;
                 }
 
-                $html = '';
+                $html = '
+                <div class="tb-data-container">
+                    <div class="row border-elememt management-data-headings">
+                        <div class="col-sm-6 text-center" style="font-weight: 600;">
+                            Fields
+                        </div>
+                        <div class="col-sm-6 text-center"  style="font-weight: 600;">
+                            Values
+                        </div>
+                    </div>';
                 foreach ($formattedData as $label => $value) {
                     if (is_null($value) || trim((string) $value) === '') {
                         continue;
@@ -113,16 +132,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                         $displayValue = htmlspecialchars((string) $value);
                     }
                     $html .= '
-                        <div class="row mb-2">
-                            <div class="col-sm-5 text-left">
-                                <strong>' . htmlspecialchars($label) . '</strong>
+                        <div class="row border-elememt">
+                            <div class="col-sm-6 text-center">
+                                ' . htmlspecialchars($label) . '
                             </div>
-                            <div class="col-sm-7 text-left">
+                            <div class="col-sm-6 text-center">
                                 ' . $displayValue . '
                             </div>
                         </div>
                     ';
                 }
+                $html .= '</div>';
+
             } else {
                 $html = '<div class="alert alert-warning">No data found</div>';
             }
@@ -152,7 +173,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                 }
 
                 if (!empty($formattedData)) {
-                    $html = '';
+                    $html = '
+                    <div class="tb-data-container">
+                        <div class="row border-elememt management-data-headings">
+                            <div class="col-sm-6 text-center" style="font-weight: 600;">
+                                Fields
+                            </div>
+                            <div class="col-sm-6 text-center"  style="font-weight: 600;">
+                                Values
+                            </div>
+                        </div>';
+
                     foreach ($formattedData as $label => $value) {
                         if (is_null($value) || trim((string) $value) === '') {
                             continue;
@@ -168,16 +199,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                         }
                         
                         $html .= '
-                            <div class="row mb-2">
-                                <div class="col-sm-5 text-left">
-                                    <strong>' . htmlspecialchars($label) . '</strong>
-                                </div>
-                                <div class="col-sm-7 text-left">
-                                    ' . $displayValue . '
-                                </div>
+                        <div class="row border-elememt">
+                            <div class="col-sm-6 text-center">
+                                ' . htmlspecialchars($label) . '
                             </div>
-                        ';
+                            <div class="col-sm-6 text-center">
+                                ' . $displayValue . '
+                            </div>
+                        </div>
+                    ';
                     }
+                    $html .= '</div>';
+
                 } else {
                     $html = '<div class="alert alert-warning">No displayable data found</div>';
                 }

@@ -43,17 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
         $userData = $helper->accountsListSearch('users');
 
         if (!empty($userData['responseData']) && is_array($userData['responseData'])) {
-            $html .= '<h3 style="margin-top:15px;">Users</h3>';
-            $html .= '
-            <table class="table table-bordered" style="width:100%; border:1px solid #afafaf;">
-                <thead style="background:#f8f9fa; font-weight:bold;">
-                    <tr>
-                        <th>User</th>
-                        <th style="width:300px; text-align:center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-            ';
+            $html .= '<h3 style="margin-top:15px;">Users</h3>
+            <div class="tb-data-container">
+                <div class="row border-elememt management-data-headings">
+                    <div class="col-sm-8 text-center" style="font-weight: 600;">
+                        Aliases
+                    </div>
+                    <div class="col-sm-4 text-center"  style="font-weight: 600;">
+                        Actions
+                    </div>
+                </div>';
 
             foreach ($userData['responseData'] as $index => $user) {
                 if (!is_array($user)) continue;
@@ -69,27 +68,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     $formattedData[$helper->labelFormat($label)] = $value;
                 }
 
-                // Table row
                 $html .= '
-                    <tr>
-                        <td>' . htmlspecialchars($userHeading) . '</td>
-                        <td style="text-align:center;">
-                            <button class="btn custom-btn view-user" data-target="userPopup' . $index . '"><i class="fas fa-eye fa-fw"></i></button>
-                            <button class="btn custom-btn edit-user" style="background: green !important;" data-target="userEditPopup' . $index . '"><i class="fas fa-edit fa-fw"></i></button>
-                            <button class="btn custom-btn delete-user" style="background: red !important;" data-target="deletePopup' . $index . '"><i class="fas fa-trash fa-fw"></i></button>
-                        </td>
-                    </tr>
-                ';
+                <div class="row border-elememt">
+                    <div class="col-sm-8 text-center">
+                        ' . htmlspecialchars($userHeading) . '
+                    </div>
+                    <div class="col-sm-4 text-center action-btns">
+                        <i class="fas fa-eye fa-fw view-alias" style="background: transparent; color: #007bff !important;" data-target="userPopup' . $index . '"></i>
+                        <i class="fas fa-edit fa-fw edit-alias" style="background: transparent; color: green !important;" data-target="userEditPopup' . $index . '"></i>
+                        <i class="fas fa-trash fa-fw delete-alias" style="background: transparent; color: red !important;" data-target="deletePopup' . $index . '"></i>
+                    </div>
+                </div>
 
-                // View Popup
-                $html .= '
-                    <div id="userPopup' . $index . '" class="custom-popup">
-                        <div class="custom-popup-content">
-                            <div class="custom-popup-header">
-                                ' . htmlspecialchars($userHeading) . ' - Details
-                                <span class="close-popup">&times;</span>
-                            </div>
-                            <div class="custom-popup-body">';
+                <!--  View Popup  -->
+                <div id="userPopup' . $index . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <div class="custom-popup-header">
+                            ' . htmlspecialchars($userHeading) . ' - Details
+                            <span class="close-popup">&times;</span>
+                        </div>
+                        <div class="custom-popup-body">
+                            <table id="userDetailTbl' . $index . '" class="data-tbl">
+                                <tr class="management-data-headings">
+                                    <th>Field</th>
+                                    <th>Value</th>
+                                </tr>';
 
                 foreach ($formattedData as $label => $value) {
                     if (is_null($value) || trim((string) $value) === '') continue;
@@ -103,111 +106,110 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     }
 
                     $html .= '
-                                <div class="row mb-2">
-                                    <div class="col-sm-5 text-left"><strong>' . htmlspecialchars($label) . '</strong></div>
-                                    <div class="col-sm-7 text-left">' . $displayValue . '</div>
-                                </div>';
+                            <tr>
+                                <td>' . htmlspecialchars($label) . '</div>
+                                <td>' . $displayValue . '</div>
+                            </tr>';
                 }
 
-                $html .= '
-                            </div>
+                $html .= '</table>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Edit Popup -->
-                    <div id="userEditPopup' . $index . '" class="custom-popup">
-                        <div class="custom-popup-content" style="text-align: left;">
-                            <div class="custom-popup-header" style="text-align: center !important; font-size: 17px; font-weight: 600;">
-                                Edit User - ' . htmlspecialchars($userHeading) . '
-                                <span class="close-popup">&times;</span>
-                            </div>
-                            <div class="custom-popup-body">
-                                <form method="post" action="">
-                                    <div class="form-group">
-                                        <label for="username' . $index . '">Username</label>
-                                        <input class="form-control" type="text" id="username' . $index . '" 
-                                            name="username" 
-                                            value="' . htmlspecialchars($domainUserGet['userName']) . '">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="displayname' . $index . '">Display Name</label>
-                                        <input class="form-control" type="text" id="displayname' . $index . '" 
-                                            name="displayname" 
-                                            value="' . htmlspecialchars($domainUserGet['fullName']) . '">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="password' . $index . '">New Password</label>
-                                        <input class="form-control" type="password" id="password' . $index . '" name="password">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="mailboxsize' . $index . '">Mailbox Size (MB)</label>
-                                        <input class="form-control" type="number" id="mailboxsize' . $index . '" 
-                                            name="mailboxsize" min="0" 
-                                            value="' . htmlspecialchars($domainUserGet['maxMailboxSize'] / 1024 / 1024) . '" 
-                                            style="width: 150px">
-                                    </div>
-
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="domainadmin' . $index . '" 
-                                            name="domainadmin" ' . (!empty($domainUserGet['securityFlags']['isDomainAdmin']) ? 'checked' : '') . '>
-                                        <label class="form-check-label" for="domainadmin' . $index . '">
-                                            Domain Administrator
-                                        </label>
-                                    </div>
-
-                                    <input type="hidden" name="selectuser" value="' . htmlspecialchars($domainUserGet['userName']) . '">
-                                    <input type="hidden" name="id" value="' . (int)$id . '">
-                                    <input type="hidden" name="modop" value="custom">
-                                    <input type="hidden" name="formAction" value="savechangessmartermailuser">
-
-                                    <div class="mt-3">
-                                        <input class="btn btn-primary edit-domain-user" type="submit" style="right: unset; margin-top: 15px; position: unset;" value="Save Changes">
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Delete Popup -->
-                    <div id="deletePopup' . $index . '" class="custom-popup">
-                        <div class="custom-popup-content">
+                <!--  Edit Popup  -->
+                <div id="userEditPopup' . $index . '" class="custom-popup">
+                    <div class="custom-popup-content"  style="text-align: left;">
+                        <div class="custom-popup-header"  style="text-align: center !important; font-size: 17px; font-weight: 600;">
+                            Edit User - ' . htmlspecialchars($userHeading) . '
                             <span class="close-popup">&times;</span>
-                            <h1 style="margin: 0;"><i class="fas fa-times-circle fa-fw" style="color: red;"></i></h1>
-                            <p>Are you sure you want to delete <strong>' . htmlspecialchars($user['userName']) . '</strong>?</p>
-                            <button class="btn custom-btn confirm-delete" 
-                                    data-username="' . htmlspecialchars($user['userName']) . '" 
-                                    data-type="user">Yes, Delete</button>
+                        </div>
+                        <div class="custom-popup-body">
+                            <form method="post" action="">
+                                <div class="form-group">
+                                    <label for="username' . $index . '">Username</label>
+                                    <input class="form-control" type="text" id="username' . $index . '" 
+                                        name="username" 
+                                        value="' . htmlspecialchars($domainUserGet['userName']) . '">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="displayname' . $index . '">Display Name</label>
+                                    <input class="form-control" type="text" id="displayname' . $index . '" 
+                                        name="displayname" 
+                                        value="' . htmlspecialchars($domainUserGet['fullName']) . '">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="password' . $index . '">New Password</label>
+                                    <input class="form-control" type="password" id="password' . $index . '" name="password">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="mailboxsize' . $index . '">Mailbox Size (MB)</label>
+                                    <input class="form-control" type="number" id="mailboxsize' . $index . '" 
+                                        name="mailboxsize" min="0" 
+                                        value="' . htmlspecialchars($domainUserGet['maxMailboxSize'] / 1024 / 1024) . '" 
+                                        style="width: 150px">
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="domainadmin' . $index . '" 
+                                        name="domainadmin" ' . (!empty($domainUserGet['securityFlags']['isDomainAdmin']) ? 'checked' : '') . '>
+                                    <label class="form-check-label" for="domainadmin' . $index . '">
+                                        Domain Administrator
+                                    </label>
+                                </div>
+
+                                <input type="hidden" name="selectuser" value="' . htmlspecialchars($domainUserGet['userName']) . '">
+                                <input type="hidden" name="id" value="' . (int)$id . '">
+                                <input type="hidden" name="modop" value="custom">
+                                <input type="hidden" name="formAction" value="savechangessmartermailuser">
+
+                                <div class="mt-3">
+                                    <input class="btn btn-primary edit-domain-user" type="submit"  style="right: unset; margin-bottom: 34px; position: unset;" value="Save Changes">
+                                </div>
+                            </form>
                         </div>
                     </div>
-                ';
+                </div>
+
+
+                <!--  Delete Popup  -->
+                <div id="deletePopup' . $index . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <span class="close-popup">&times;</span>
+                        <h1 style="margin: 0;"><i class="fas fa-times-circle fa-fw" style="color: red;"></i></h1>
+                        <p>Are you sure you want to delete <strong>' . htmlspecialchars($user['userName']) . '</strong>?</p>
+                        <button class="btn custom-btn confirm-delete" 
+                                data-username="' . htmlspecialchars($user['userName']) . '" 
+                                data-type="user">Yes, Delete</button>
+                    </div>
+                </div>';
             }
 
-            $html .= '</tbody></table>';
+            $html .= '</div>';
+
         } else {
             $html .= '<div class="alert alert-warning">No users found</div>';
         }
     }
-
 
     // Get Aliases
     if ($tab == 'userAliases') {
         $aliasData  = $helper->accountsListSearch('aliases');
 
         if (!empty($aliasData['responseData']) && is_array($aliasData['responseData'])) {
-            $html .= '<h3 style="margin-top:30px;">Aliases</h3>';
-            $html .= '
-            <table class="table table-bordered" style="width:100%; border:1px solid #afafaf;">
-                <thead style="background:#f8f9fa; font-weight:bold;">
-                    <tr>
-                        <th>Alias</th>
-                        <th style="width:300px; text-align:center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-            ';
+            $html .= '<h3 style="margin-top:30px;">Aliases</h3>
+            <div class="tb-data-container">
+                <div class="row management-data-headings border-elememt">
+                    <div class="col-sm-8 text-center" style="font-weight: 600;">
+                        Aliases
+                    </div>
+                    <div class="col-sm-4 text-center"  style="font-weight: 600;">
+                        Actions
+                    </div>
+                </div>';
 
             foreach ($aliasData['responseData'] as $aIndex => $alias) {
                 if (!is_array($alias)) continue;
@@ -217,19 +219,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                 // Get user-specific data for editing
                 $domainAliasGet = $helper->getdomainAliasData($alias['userName']);
 
-                // table row
-                $html .= '
-                    <tr>
-                        <td>' . htmlspecialchars($aliasHeading) . '</td>
-                        <td style="text-align:center;">
-                            <button class="btn custom-btn view-alias" style="background: #007bff !important;" data-target="aliasPopup' . $aIndex . '"><i class="fas fa-eye fa-fw"></i></button>
-                            <button class="btn custom-btn edit-alias" style="background: green !important;" data-target="aliasEditPopup' . $aIndex . '"><i class="fas fa-edit fa-fw"></i></button>
-                            <button class="btn custom-btn delete-alias" style="background: red !important;" data-target="aliasDeletePopup' . $aIndex . '"><i class="fas fa-trash fa-fw"></i></button>
-                        </td>
-                    </tr>
-                ';
-
-                // Keep your existing popups
                 $formattedData = [];
                 foreach ($alias as $label => $value) {
                     if (is_array($value) || is_object($value)) continue;
@@ -249,131 +238,145 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                 $internalOnly = ($domainAliasGet['internalOnly'] == 1) ? 'checked="checked"' : '';
                 $hideFromGAL  = ($domainAliasGet['hideFromGAL'] == 1) ? 'checked="checked"' : '';
 
-                // append all popups as they are
-                $html .= ' 
-                    <!-- view popup -->
-                    <div id="aliasPopup' . $aIndex . '" class="custom-popup">
-                        <div class="custom-popup-content">
-                            <div class="custom-popup-header">
-                                ' . htmlspecialchars($aliasHeading) . ' - Details
-                                <span class="close-popup">&times;</span>
-                            </div>
-                            <div class="custom-popup-body">';
-
-                                foreach ($formattedData as $label => $value) {
-                                    if (is_null($value) || trim((string) $value) === '') {
-                                        continue;
-                                    }
-
-                                    if ($value === true) {
-                                        $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
-                                    } elseif ($value === false) {
-                                        $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
-                                    } elseif (is_numeric($value) && $label && stripos($label, 'bytes') !== false) {
-                                            $displayValue = $helper->formatSize((float) $value);
-                                    } else {
-                                        $displayValue = htmlspecialchars((string) $value);
-                                    }
-
-                                    $html .= '
-                                            <div class="row mb-2">
-                                                <div class="col-sm-5 text-left"><strong>' . htmlspecialchars($label) . '</strong></div>
-                                                <div class="col-sm-7 text-left">' . $displayValue . '</div>
-                                            </div>';
-                                }
-
-                                $html .= '
-                            </div>
-                        </div>
+                $html .= '
+                <div class="row border-elememt">
+                    <div class="col-sm-8 text-center">
+                        ' . htmlspecialchars($aliasHeading) . '
                     </div>
-
-                    <!-- Edit alias popup -->
-                    <div id="aliasEditPopup' . $aIndex . '" class="custom-popup">
-                        <div class="custom-popup-content" style="text-align: left;">
-                            <div class="custom-popup-header" style="text-align: center !important; font-size: 17px; font-weight: 600;">
-                                Edit Alias - ' . htmlspecialchars($aliasHeading) . '
-                                <span class="close-popup">&times;</span>
-                            </div>
-                            <div class="custom-popup-body">
-                                <form method="post" action="">
-                                    <div class="form-group">
-                                        <label for="aliasname">Alias Name (username)</label>
-                                        <input class="form-control" type="text" name="aliasname" value="' . htmlspecialchars($domainAliasGet['name']) . '">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="displayname">Display Name</label>
-                                        <input class="form-control" type="text" name="displayname" value="' . htmlspecialchars($domainAliasGet['displayName']) . '">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="aliasemailaddress">Alias Email Addresses</label>
-                                        <p style="font-size: 12px; float: right;">One address per line</p>
-                                        <textarea cols="36" rows="10" name="aliasemailaddress" style="overflow: auto; resize: none; width: 100%; padding: 10px;">' . htmlspecialchars($aliasTargetList) . '</textarea>
-                                    </div>
-
-                                    <div class="form-group row">
-                                        <div class="col-sm-10">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="allowsending" ' . $allowSending . '/>
-                                                <label class="form-check-label" for="allowsending">
-                                                    Alias can be used as a from address in webmail
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group row">
-                                        <div class="col-sm-10">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="internalonly" ' . $internalOnly . '/>
-                                                <label class="form-check-label" for="internalonly">
-                                                    Internal Only
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group row">
-                                        <div class="col-sm-10">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="showingal" ' . $hideFromGAL . '/>
-                                                <label class="form-check-label" for="showingal">
-                                                    Show in Global Address List
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <input type="hidden" name="selectuser" value="' . htmlspecialchars($domainAliasGet['name']) . '" />
-                                    <input type="hidden" name="modop" value="custom" />
-                                    <input type="hidden" name="formAction" value="savechangessmartermailalias" />
-                                    <input class="btn btn-primary edit-domain-alias" type="submit" style="right: unset; margin-top: 15px; position: unset;" value="Save Changes" />
-                                </form>
-                            </div>
-                        </div>
+                    <div class="col-sm-4 text-center action-btns">
+                        <i class="fas fa-eye fa-fw view-alias" style="background: transparent; color: #007bff !important;" data-target="aliasPopup' . $aIndex . '"></i>
+                        <i class="fas fa-edit fa-fw edit-alias" style="background: transparent; color: green !important;" data-target="aliasEditPopup' . $aIndex . '"></i>
+                        <i class="fas fa-trash fa-fw delete-alias" style="background: transparent; color: red !important;" data-target="aliasDeletePopup' . $aIndex . '"></i>
                     </div>
+                </div>
 
-                    <!-- delete confirm popup -->
-                    <div id="aliasDeletePopup' . $aIndex . '" class="custom-popup">
-                        <div class="custom-popup-content">
+                <!-- view popup -->
+                <div id="aliasPopup' . $aIndex . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <div class="custom-popup-header">
+                            ' . htmlspecialchars($aliasHeading) . ' - Details
                             <span class="close-popup">&times;</span>
-                            <h1 style="margin: 0;"><i class="fas fa-times-circle fa-fw" style="color: red;"></i></h1>
-                            <p>Are you sure you want to delete <strong>' . htmlspecialchars($alias['aliasEmail']) . '</strong>?</p>
-                            <button class="btn custom-btn confirm-delete" 
-                                    data-username="' . htmlspecialchars($alias['aliasEmail']) . '" 
-                                    data-type="alias">Yes, Delete</button>
+                        </div>
+                        <div class="custom-popup-body">
+                        <table id="userDetailTbl' . $index . '" class="data-tbl">
+                                <tr class="management-data-headings">
+                                    <th>Field</th>
+                                    <th>Value</th>
+                                </tr>';
+
+                foreach ($formattedData as $label => $value) {
+                    if (is_null($value) || trim((string) $value) === '') {
+                        continue;
+                    }
+
+                    if ($value === true) {
+                        $displayValue = '<i class="fa fa-check" style="color: #02af02" aria-hidden="true"></i>';
+                    } elseif ($value === false) {
+                        $displayValue = '<i class="fa fa-times" style="color: red" aria-hidden="true"></i>';
+                    } elseif (is_numeric($value) && $label && stripos($label, 'bytes') !== false) {
+                            $displayValue = $helper->formatSize((float) $value);
+                    } else {
+                        $displayValue = htmlspecialchars((string) $value);
+                    }
+
+                    $html .= '
+                            <tr>
+                                <td>' . htmlspecialchars($label) . '</div>
+                                <td>' . $displayValue . '</div>
+                            </tr>';
+                }
+
+                $html .= '</table>
                         </div>
                     </div>
-                ';
+                </div>
+
+                <!-- Edit alias popup -->
+                <div id="aliasEditPopup' . $aIndex . '" class="custom-popup">
+                    <div class="custom-popup-content" style="text-align: left;">
+                        <div class="custom-popup-header" style="text-align: center !important; font-size: 17px; font-weight: 600;">
+                            Edit Alias - ' . htmlspecialchars($aliasHeading) . '
+                            <span class="close-popup">&times;</span>
+                        </div>
+                        <div class="custom-popup-body">
+                            <form method="post" action="">
+                                <div class="form-group">
+                                    <label for="aliasname">Alias Name (username)</label>
+                                    <input class="form-control" type="text" name="aliasname" value="' . htmlspecialchars($domainAliasGet['name']) . '">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="displayname">Display Name</label>
+                                    <input class="form-control" type="text" name="displayname" value="' . htmlspecialchars($domainAliasGet['displayName']) . '">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="aliasemailaddress">Alias Email Addresses</label>
+                                    <p style="font-size: 12px; float: right;">One address per line</p>
+                                    <textarea cols="36" rows="10" name="aliasemailaddress" style="overflow: auto; resize: none; width: 100%; padding: 10px;">' . htmlspecialchars($aliasTargetList) . '</textarea>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-10">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="allowsending" ' . $allowSending . '/>
+                                            <label class="form-check-label" for="allowsending">
+                                                Alias can be used as a from address in webmail
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-10">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="internalonly" ' . $internalOnly . '/>
+                                            <label class="form-check-label" for="internalonly">
+                                                Internal Only
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <div class="col-sm-10">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="showingal" ' . $hideFromGAL . '/>
+                                            <label class="form-check-label" for="showingal">
+                                                Show in Global Address List
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" name="selectuser" value="' . htmlspecialchars($domainAliasGet['name']) . '" />
+                                <input type="hidden" name="modop" value="custom" />
+                                <input type="hidden" name="formAction" value="savechangessmartermailalias" />
+                                <input class="btn btn-primary edit-domain-alias" type="submit" style="right: unset; margin-bottom: 34px; position: unset;" value="Save Changes" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- delete confirm popup -->
+                <div id="aliasDeletePopup' . $aIndex . '" class="custom-popup">
+                    <div class="custom-popup-content">
+                        <span class="close-popup">&times;</span>
+                        <h1 style="margin: 0;"><i class="fas fa-times-circle fa-fw" style="color: red;"></i></h1>
+                        <p>Are you sure you want to delete <strong>' . htmlspecialchars($alias['userName']) . '</strong>?</p>
+                        <button class="btn custom-btn confirm-delete" 
+                                data-username="' . htmlspecialchars($alias['userName']) . '" 
+                                data-type="alias">Yes, Delete</button>
+                    </div>
+                </div>';
             }
 
-            $html .= '</tbody></table>';
+            $html .= '</div>';
+
         } else {
             $html .= '<div class="alert alert-warning">No aliases found</div>';
         }
     }
-
 
     // Add User Form
     if ($tab == 'addUser') {
@@ -389,7 +392,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     </style>
                 <div class="management-form">
                     <h2 style="font-size: 21px;">Add SmarterMail User</h2>
-                    <form method="post" action="" id="addSmarterMailUser" style="text-align: left;border: 3px solid #f3f1f1;padding: 20px;border-radius: 10px;">
+                    <form method="post" action="" id="addSmarterMailUser" style="text-align: left;">
                         <div class="form-group">
                             <label for="username" style="font-weight: 600;">Username</label>
                             <input class="form-control" type="text" id="username" name="username" onkeyup="checkPasswordReqs()">
@@ -460,7 +463,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                         <input type="hidden" name="id" value="' . (int) $serviceId . '" />
                         <input type="hidden" name="modop" value="custom" />
                         <input type="hidden" name="formAction" value="createsmartermailuser" />
-                        <input id="btn-submit" style="position: unset;margin-top: 15px;margin-bottom: 15px;line-height: 24px;width: 150px;" class="btn btn-primary mgmt-form-btn" type="submit" value="Add User" disabled />
+                        <input id="btn-submit" style="position: unset;" class="btn btn-primary mgmt-form-btn" type="submit" value="Add User" disabled />
                     </form>
                 </div>
 
@@ -551,7 +554,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             </style>
             <div class="management-form">
                 <h2 style="font-size: 21px;">Add SmarterMail User Alias</h2>
-                <form method="post" action="" id="addSmarterMailAlias" style="text-align: left;border: 3px solid #f3f1f1;padding: 20px;border-radius: 10px;">
+                <form method="post" action="" id="addSmarterMailAlias" style="text-align: left;">
 
                     <div class="form-group">
                         <label for="newaliasname" style="font-weight: 600;">Alias Name</label>
@@ -605,7 +608,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     <input type="hidden" name="id" value="' . $serviceId . '" />
                     <input type="hidden" name="modop" value="custom" />
                     <input type="hidden" name="formAction" value="createsmartermailalias" />
-                    <input class="btn btn-primary mgmt-form-btn" style="position: unset;margin-top: 15px;margin-bottom: 15px;line-height: 24px;width: 150px;" type="submit" value="Add Alias" />
+                    <input class="btn btn-primary mgmt-form-btn" style="position: unset;" type="submit" value="Add Alias" />
                 </form>
             </div>
         ';
@@ -628,7 +631,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             $html = '
             <div>
                 <h1 style="padding: 10px 50px;"> Manage MAPI/EWS Users </h1>
-                <form method="post" action="" style="text-align: left;border: 3px solid #f3f1f1;padding: 20px;border-radius: 10px;">
+                <form method="post" action="">
                     <div style="padding: 10px 50px;">
 
                         <input type="hidden" name="id" value="' . (int)$id . '" />
@@ -745,7 +748,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
             $html = '
             <div>
                 <h1 style="padding: 10px 50px;"> Manage EAS Users </h1>
-                <form method="post" action="" style="text-align: left;border: 3px solid #f3f1f1;padding: 20px;border-radius: 10px;">
+                <form method="post" action="">
                     <div style="padding: 10px 50px;">
 
                         <input type="hidden" name="id" value="' . (int)$id . '" />
@@ -838,7 +841,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
         $mailingLists = $helper->getMailingLists();
 
         if (!empty($mailingLists) && is_array($mailingLists)) {
-            $html .= '<h3 style="margin-top:15px;">Mailing Lists</h3>';
+            $html .= '<h3 style="margin-top:30px;">Mailing Lists</h3>
+            <div class="tb-data-container">
+                <div class="row management-data-headings border-elememt">
+                    <div class="col-sm-8 text-center" style="font-weight: 600;">
+                        Mailing Lists
+                    </div>
+                    <div class="col-sm-4 text-center"  style="font-weight: 600;">
+                        Actions
+                    </div>
+                </div>';
 
             foreach ($mailingLists as $index => $mailer) {
                 if (!is_array($mailer)) continue;
@@ -853,12 +865,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                 }
 
                 $html .= '
-                <div class="card mb-3 mailinglist-card" style="border:1px solid #afafaf;">
-                    <div class="card-header" style="background:#f8f9fa; font-weight:bold;">
+                <div class="row border-elememt">
+                    <div class="col-sm-8 text-center">
                         ' . htmlspecialchars($mailHeading) . '
-                        <div style="float:right;">
-                            <button class="btn custom-btn view-mail" data-target="mailPopup' . $index . '">View</button>
-                        </div>
+                    </div>
+                    <div class="col-sm-4 text-center action-btns">
+                        <i class="fas fa-eye fa-fw view-mail" style="background: transparent; color: #007bff !important;" data-target="mailPopup' . $index . '"></i>
                     </div>
                 </div>
 
@@ -869,7 +881,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                             ' . htmlspecialchars($mailHeading) . ' - Details
                             <span class="close-popup">&times;</span>
                         </div>
-                        <div class="custom-popup-body">';
+                        <div class="custom-popup-body">
+                            <table id="userDetailTbl' . $index . '" class="data-tbl">
+                                    <tr class="management-data-headings">
+                                        <th>Field</th>
+                                        <th>Value</th>
+                                    </tr>';
 
                 foreach ($formattedData as $label => $value) {
                     if (is_null($value) || trim((string)$value) === '') continue;
@@ -883,17 +900,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                     }
 
                     $html .= '
-                            <div class="row mb-2">
-                                <div class="col-sm-5 text-left"><strong>' . htmlspecialchars($label) . '</strong></div>
-                                <div class="col-sm-7 text-left">' . $displayValue . '</div>
-                            </div>';
+                            <tr>
+                                <td>' . htmlspecialchars($label) . '</div>
+                                <td>' . $displayValue . '</div>
+                            </tr>';
                 }
 
-                $html .= '
+                $html .= '</table>
                         </div>
                     </div>
                 </div>';
             }
+            $html .= '</div>';
         } else {
             $html .= '<div class="alert alert-warning">No mailing lists found</div>';
         }

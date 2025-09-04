@@ -207,3 +207,24 @@ button.btn.custom-btn.close-popup {
     font-size: 20px;
     font-weight: 600;
 }
+.col-sm-4.text-center.action-btns i.fas {
+    margin-left: 12px;
+    font-size: 18px;
+    cursor: pointer;
+}
+.tb-data-container {
+    border: 1px solid #d7d7d7;
+}
+.management-data-headings {
+    background: #04428512;
+}
+.row.border-elememt {
+    margin: 0;
+}
+.data-tbl {
+    width: 100%;
+    border: 1px solid #d7d7d7;
+}
+.data-tbl tr {
+    border: 1px solid #d7d7d7;
+}
