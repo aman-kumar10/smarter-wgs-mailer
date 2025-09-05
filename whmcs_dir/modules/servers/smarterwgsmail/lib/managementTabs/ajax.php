@@ -570,7 +570,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $whmcs->get_req_var('action') === '
                         <h1 style="margin: 0;"><i class="fas fa-times-circle fa-fw" style="color: red;"></i></h1>
                         <p>Are you sure you want to delete <strong>' . htmlspecialchars($mailHeading) . '</strong>?</p>
                         <button class="btn custom-btn confirm-delete" 
-                                data-username="' . $$mailer['id'] . '" 
+                                data-username="' . $mailer['id'] . '" 
                                 data-type="mail">Yes, Delete</button>
                     </div>
                 </div>';
