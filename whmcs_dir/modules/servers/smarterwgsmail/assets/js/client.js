@@ -105,7 +105,7 @@ $(document).ready(function () {
     });
 
 
-    // Add SmarterMail User
+    // Add User/Alias/Mail-list
     $(document).on("click", ".mgmt-form-btn", function (e) {
         e.preventDefault();
 
@@ -119,6 +119,7 @@ $(document).ready(function () {
             method: "POST",
             data: $form.serialize() + "&action=managementFormHandling&serviceid=" + serviceId,
             beforeSend: function () {
+                $("#ajax-overlay").show();
                 $btn.val("Submitting...").prop("disabled", true);
                 $btn.css('color', '#000');
             },
@@ -126,18 +127,38 @@ $(document).ready(function () {
                 $("#custom-sub-formresponse").html(response).show();
                 $btn.val(originalBtnText).prop("disabled", false);
                 $form[0].reset();
+                let firstSubTab = $(".custom-sub-link.active");
+                if (firstSubTab.length) {
+                    loadSubTab(firstSubTab);
+                }
             },
             error: function () {
                 $btn.val(originalBtnText).prop("disabled", false);
                 $("#custom-sub-formresponse").html("<p class='text-danger'>Error Submitting the form.</p>").show();
+            },
+            complete: function () {
+                $("#ajax-overlay").hide();
             }
         });
     });
 
 
 
-    // open popup (view, delete, edit, alias)
-    $(document).on("click", ".view-user, .delete-user, .view-alias, .delete-alias, .edit-user, .edit-alias, .view-mail, .edit-mail, .delete-mail", function() {
+    // open popup to view the user/alias
+    $(document).on("click", ".view-user, .view-alias, .view-mail", function() {
+        let target = $(this).data("target");
+
+        $("#ajax-overlay").show();
+
+        setTimeout(function() {
+            $("#ajax-overlay").hide();
+            $("#" + target).fadeIn();
+        }, 1000);
+        
+    });
+
+    // open popup to delete the user/alias
+    $(document).on("click", ".delete-user, .delete-alias, .delete-mail", function() {
         let target = $(this).data("target");
         $("#" + target).fadeIn();
     });
@@ -163,16 +184,27 @@ $(document).ready(function () {
         let type = $btn.data("type");
         let $card = $btn.closest(".custom-popup").siblings(".card");
 
+        let formAction = null;
+
+        if(type === 'user') {
+            formAction = 'domainUserDelete';
+        } else if(type === 'alias') {
+            formAction = 'domainAliasDelete';
+        } else {
+            formAction = 'domainMailDelete';
+        }
+
         $.ajax({
             url: "../modules/servers/smarterwgsmail/lib/managementForm/ajax.php",
             method: "POST",
             data: {
                 action: 'managementFormHandling',
-                formAction: type === "user" ? "domainUserDelete" : "domainAliasDelete",
+                formAction: formAction,
                 userName: username,
                 serviceid: serviceId
             },
             beforeSend: function() {
+                $("#ajax-overlay").show();
                 $btn.prop("disabled", true).text("Deleting...");
                 $("#custom-sub-formresponse").html("").hide(); 
             },
@@ -192,6 +224,7 @@ $(document).ready(function () {
                 $btn.closest("#custom-sub-response").hide();
             },
             complete: function() {
+                $("#ajax-overlay").hide();
                 $btn.prop("disabled", false).text("Yes, Delete");
             }
         });
@@ -211,6 +244,7 @@ $(document).ready(function () {
             method: "POST",
             data: $form.serialize() + "&action=managementFormHandling&serviceid=" + serviceId,
             beforeSend: function () {
+                $("#ajax-overlay").show();
                 $btn.val("Submitting...").prop("disabled", true);
                 $btn.css('color', '#000');
             },
@@ -227,10 +261,107 @@ $(document).ready(function () {
             error: function () {
                 $btn.val(originalBtnText).prop("disabled", false);
                 $("#custom-sub-formresponse").html("<p class='text-danger'>Error Submitting the form.</p>").show();
+            },
+            complete: function () {
+                $("#ajax-overlay").hide();
             }
         });
     });
-    
 
+    // edit user/alias popup
+    $(document).on("click", ".edit-user, .edit-alias", function(e) {
+        e.preventDefault();
+
+        let serviceId = $("#custom-tabs-container").data("serviceid");
+        let userName = $(this).data('editdata');
+        let $btn = $(this);
+        
+        let formAction = $btn.hasClass("edit-user") ? "getUserEditPopup" : "getAliasEditPopup";
+
+        $.ajax({
+            url: '../modules/servers/smarterwgsmail/lib/managementForm/ajax.php',
+            method: "POST",
+            data: {
+                action: 'managementFormHandling',
+                formAction: formAction,
+                userName: userName,
+                serviceid: serviceId
+            },
+            beforeSend: function () {
+                $("#ajax-overlay").show();
+            },
+            success: function (response) {
+                $("#custom-sub-formresponse").html(response).show();
+            },
+            error: function () {
+                $("#custom-sub-formresponse").html("<p class='text-danger'>An error occurred while getting the edit form.</p>").show();
+            },
+            complete: function () {
+                $("#ajax-overlay").hide();
+            }
+        });
+    });
+
+    // add user/alias popup
+    $(document).on("click", ".add-user, .add-alias, .add-mail, .save-easLicenses", function(e) {
+        e.preventDefault();
+
+        let serviceId = $("#custom-tabs-container").data("serviceid");
+        
+        let formAction = $(this).attr('id');
+
+        $.ajax({
+            url: '../modules/servers/smarterwgsmail/lib/managementForm/ajax.php',
+            method: "POST",
+            data: {
+                action: 'managementFormHandling',
+                formAction: formAction,
+                serviceid: serviceId
+            },
+            beforeSend: function () {
+                $("#ajax-overlay").show();
+            },
+            success: function (response) {
+                $("#custom-sub-formresponse").html(response).show();
+            },
+            error: function () {
+                $("#custom-sub-formresponse").html("<p class='text-danger'>An error occurred while getting the edit form.</p>").show();
+            },
+            complete: function () {
+                $("#ajax-overlay").hide();
+            }
+        });
+    });
+
+
+    // Edit mail list / login url
+    // $(document).on("click", ".edit-mail-login", function(e) {
+    //     e.preventDefault();
+
+    //     let serviceId = $("#custom-tabs-container").data("serviceid");
+        
+    //     $.ajax({
+    //         url: '../modules/servers/smarterwgsmail/lib/managementForm/ajax.php',
+    //         method: "POST",
+    //         data: {
+    //             action: 'managementFormHandling',
+    //             formAction: 'loginToEditMail',
+    //             serviceid: serviceId
+    //         },
+    //         beforeSend: function () {
+    //             $("#ajax-overlay").show();
+    //         },
+    //         success: function (response) {
+    //             $("#custom-sub-formresponse").html(response).show();
+    //         },
+    //         error: function () {
+    //             $("#custom-sub-formresponse").html("<p class='text-danger'>An error occurred while getting the edit form.</p>").show();
+    //         },
+    //         complete: function () {
+    //             $("#ajax-overlay").hide();
+    //         }
+    //     });
+    // });
+    
 
 });

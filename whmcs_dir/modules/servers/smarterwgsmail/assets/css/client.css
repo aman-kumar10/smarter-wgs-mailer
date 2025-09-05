@@ -228,3 +228,18 @@ button.btn.custom-btn.close-popup {
 .data-tbl tr {
     border: 1px solid #d7d7d7;
 }
+.add-frm-btn {
+    display: flex;
+    justify-content: flex-end; 
+    padding-bottom: 5px;
+}
+.add-frm-btn a.add-user, .add-frm-btn a.add-alias, .add-frm-btn a.add-mail {
+    padding: 10px;
+    margin-left: auto;
+    border-radius: 6px;
+    font-weight: 600;
+    color: #fff !important;
+    background: linear-gradient(135deg, #28a745, #218838) !important;
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.4);
+    transition: all 0.3s ease;
+}

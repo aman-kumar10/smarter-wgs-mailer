@@ -687,24 +687,14 @@ function smarterwgsmail_ClientArea(array $params) {
         // Normal Client Area Page Load
         $defaultManagements = [
             'userAccount' => [
-                'tabname' => "User Account",
+                'tabname' => "Manage Users",
                 'attID' => 'userAccount',
                 'attFaCls' => 'fa-user',
             ],
             'userAliases' => [
-                'tabname' => "User Aliases",
+                'tabname' => "Manage Aliases",
                 'attID' => 'userAliases',
                 'attFaCls' => 'fa-random',
-            ],
-            'addUser' => [
-                'tabname' => "Add User",
-                'attID' => 'addUser',
-                'attFaCls' => 'fa-user-plus',
-            ],
-            'addAlias' => [
-                'tabname' => "Add Alias",
-                'attID' => 'addAlias',
-                'attFaCls' => 'fa-plus',
             ],
         ];
 

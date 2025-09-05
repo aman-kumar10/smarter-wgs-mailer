@@ -56,6 +56,21 @@
             <div id="custom-sub-formresponse" class="custom-tab-formresponse"></div>
             <div id="custom-sub-response" class="custom-tab-response"></div>
         </div>
+        <div id="ajax-overlay" 
+            style="display: none;
+                position:fixed;
+                top:0;
+                left:0;
+                width:100%;
+                height:100%;
+                background:rgba(255,255,255,0.7);
+                z-index:9999;
+                text-align:center;
+                padding-top:200px;
+                font-size:20px;
+                color:#333;">
+            <i class="fas fa-spinner fa-spin temp-loader" style="font-size: 40px;"></i>
+        </div>
     </div>
     {/if}
 

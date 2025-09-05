@@ -575,7 +575,7 @@ class Helper {
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
                 return  $response['result']['userData'];
             } else {
-                return $response['result']['message'];
+                return !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'Unable find the user data for edit.';
             }
 
         } catch(Exception $e) {
@@ -591,22 +591,204 @@ class Helper {
 
             $tokenDA = $this->apiLoginDAtoken($this->params);
             $endPoint = '/api/v1/settings/domain/alias/'.$user;
-            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'get-user', $tokenDA);
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'get-alias', $tokenDA);
 
             if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
                 return  $response['result']['alias'];
             } else {
-                return $response['result']['message'];
+                return !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'Unable find the alias data for edit.';
             }
 
         } catch(Exception $e) {
-            logActivity("Error in get-user, Error: ".$e->getMessage());
+            logActivity("Error in get-alias, Error: ".$e->getMessage());
         }
     }
 
 
+    // domian mailing list delete
+    public function domainMailDelete($data, $user) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+
+            $endPoint = '/api/v1/settings/domain/mailing-lists/'.$user.'/delete';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'mail-list-delete', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  [
+                    'status' => 'success',
+                    'message' => $response['result']['message']
+                ];
+            } else {
+                return  [
+                    'status' => 'error',
+                    'message' => !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'Error to delete the user'
+                ];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in mail-list-delete, Error: ".$e->getMessage());
+        }
+    }
+
+    // domian mailing list add
+    public function mailListAdd($data) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+
+            $endPoint = '/api/v1/settings/domain/mailing-lists/add';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'mailing-lists-add', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  [
+                    'status' => 'success',
+                    'message' => $response['result']['message']
+                ];
+            } else {
+                return  [
+                    'status' => 'error',
+                    'message' => !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'Error to add mailing list'
+                ];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in mailing-lists-add, Error: ".$e->getMessage());
+        }
+    }
+
+    // ******* domian mailing list login url *******
+    // public function getMailLoginURL($user) {
+    //     try {
+
+    //         $curl = new Curl($this->params);
+
+    //         $tokenDA = $this->apiLoginDAtoken($this->params);
+    //         // $loginUrl = sm_GetAutoLoginUrl($params, "/settings/user/mailing-lists/list/".$_POST["mlid"]);
+    //         $endPoint = '/api/v1/settings/domain/mailing-lists/'.$user.'/delete';
+    //         $response = $curl->curlCall($endPoint, $data, 'POST', 'mail-list-delete', $tokenDA);
+
+    //         if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+    //             return  [
+    //                 'status' => 'success',
+    //                 'message' => $response['result']['message']
+    //             ];
+    //         } else {
+    //             return  [
+    //                 'status' => 'error',
+    //                 'message' => !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'Error to delete the user'
+    //             ];
+    //         }
+
+    //     } catch(Exception $e) {
+    //         logActivity("Error in mail-list-delete, Error: ".$e->getMessage());
+    //     }
+    // }
+
+    // licensedMailboxes EAS
+
+    public function licensedMailboxes() {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/active-sync-mailboxes';
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'active-sync-mailboxes', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result']['activeSyncAccounts'];
+            } else {
+                return !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'No active sync mailbox found';
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in active-sync-mailboxes, Error: ".$e->getMessage());
+        }
+    }
+
+    // activeSyncPatch EAS
+    public function activeSyncPatch($data) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+
+            $endPoint = '/api/v1/settings/domain/active-sync-mailboxes-patch';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'active-sync-mailboxes-patch', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  [
+                    'status' => 'success',
+                    'message' => $response['result']['message']
+                ];
+            } else {
+                return  [
+                    'status' => 'error',
+                    'message' => !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'Error to manage the license'
+                ];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in active-sync-mailboxes-patch, Error: ".$e->getMessage());
+        }
+    }
 
 
+    // licensedMailboxes EWS
+    public function licensedMailboxesEWS() {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+            $endPoint = '/api/v1/settings/domain/mapi-ews-mailboxes';
+            $response = $curl->curlCall($endPoint, (object)[], 'GET', 'mapi-ews-mailboxes', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  $response['result']['mapiEwsAccounts'];
+            } else {
+                return !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'No active sync mailbox found';
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in mapi-ews-mailboxes, Error: ".$e->getMessage());
+        }
+    }
+
+
+    // activeSyncPatch EWS
+    public function activeSyncPatchEWS($data) {
+        try {
+
+            $curl = new Curl($this->params);
+
+            $tokenDA = $this->apiLoginDAtoken($this->params);
+
+            $endPoint = '/api/v1/settings/domain/mapi-ews-mailboxes-patch';
+            $response = $curl->curlCall($endPoint, $data, 'POST', 'mapi-ews-mailboxes-patch', $tokenDA);
+
+            if($response['httpcode'] == 200 && ($response['result']['success'] == 1 || $response['result']['success'] == true)) {
+                return  [
+                    'status' => 'success',
+                    'message' => $response['result']['message']
+                ];
+            } else {
+                return  [
+                    'status' => 'error',
+                    'message' => !empty(trim($response['result']['message'])) ? $response['result']['message'] : 'Error to manage the license'
+                ];
+            }
+
+        } catch(Exception $e) {
+            logActivity("Error in mapi-ews-mailboxes-patch, Error: ".$e->getMessage());
+        }
+    }
 
 
 
